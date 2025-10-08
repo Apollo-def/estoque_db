@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Sistema de Estoque</title>
+    <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+    <main class="auth-wrapper">
+        <div id="loginContainer" class="auth-card">
+            <h2 class="auth-card__title">Acesso ao Sistema</h2>
+            <form id="loginForm" class="form">
+                <div class="form__group">
+                    <label for="username" class="form__label">Usuário</label>
+                    <input type="text" id="username" name="username" class="form__control" required />
+                </div>
+                <div class="form__group">
+                    <label for="password" class="form__label">Senha</label>
+                    <input type="password" id="password" name="password" class="form__control" required />
+                </div>
+                <button type="submit" class="btn btn--primary btn--full-width">Entrar</button>
+            </form>
+            <p class="auth-card__footer">
+                <a href="register.html" id="linkRegister" class="auth-card__link">Registrar novo usuário</a>
+            </p>
+            <p id="loginError" class="message message--error"></p>
+        </div>
+    </main>
+    <script src="auth.js"></script>
+</body>
+</html>

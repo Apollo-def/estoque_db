@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Almoxarifado - Estoque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Reset básico */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+      color: #374151;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+    .sidebar h1 {
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .sidebar h1 svg {
+      width: 24px;
+      height: 24px;
+      fill: #4f46e5;
+    }
+    .nav-links {
+      flex-grow: 1;
+    }
+    .nav-links a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.5rem;
+      color: #6b7280;
+      text-decoration: none;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .nav-links a.active,
+    .nav-links a:hover {
+      background-color: #e0e7ff;
+      color: #4338ca;
+    }
+    .nav-links a svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+    .section-label {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #9ca3af;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    /* Main content */
+    .main-content {
+      flex-grow: 1;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex-grow: 1;
+      max-width: 400px;
+      position: relative;
+    }
+    .search-input input {
+      width: 100%;
+      padding: 0.5rem 2.5rem 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      outline-offset: 2px;
+    }
+    .search-input svg {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      fill: #9ca3af;
+    }
+    .header-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background-color: #e0e7ff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      color: #4338ca;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn:hover {
+      background-color: #c7d2fe;
+    }
+    /* Table container */
+    .table-container {
+      background-color: #ffffff;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+      padding: 1rem 1.5rem 2rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background-color: #f3f4f6;
+      border: none;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      color: #6b7280;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .filter-btn:hover {
+      background-color: #e0e7ff;
+      color: #4338ca;
+    }
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      color: #4b5563;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      vertical-align: middle;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+    th {
+      font-weight: 600;
+      color: #6b7280;
+    }
+    td.actions {
+      white-space: normal;
+    }
+    .btn-edit {
+      background-color: #f3f4f6;
+      border: none;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      color: #374151;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      transition: background-color 0.2s;
+    }
+    .btn-edit:hover {
+      background-color: #e0e7ff;
+      color: #4338ca;
+    }
+    .btn-move {
+      background-color: #e0e7ff;
+      border: none;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      color: #4338ca;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-move:hover {
+      background-color: #c7d2fe;
+    }
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .pagination button {
+      background-color: #f3f4f6;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .pagination button:hover {
+      background-color: #e0e7ff;
+      color: #4338ca;
+    }
+    .pagination .current-page {
+      background-color: #e0e7ff;
+      color: #4338ca;
+      cursor: default;
+    }
+    /* Sidebar right */
+    .sidebar-right {
+      width: 220px;
+      background-color: #ffffff;
+      border-left: 1px solid #e5e7eb;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .sidebar-right h2 {
+      font-weight: 600;
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+    .quick-action-btn {
+      background-color: #0f766e;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s;
+    }
+    .quick-action-btn:hover {
+      background-color: #115e59;
+    }
+    .quick-action-secondary {
+      background-color: #0e7490;
+    }
+    .quick-action-secondary:hover {
+      background-color: #0c4a6e;
+    }
+    .quick-action-link {
+      background: none;
+      border: none;
+      color: #374151;
+      cursor: pointer;
+      font-weight: 500;
+      text-align: left;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .quick-action-link:hover {
+      color: #4338ca;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" role="navigation" aria-label="Menu principal">
+    <h1>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L2 7v7c0 5 10 8 10 8s10-3 10-8V7l-10-5z"/></svg>
+      Almoxarifado
+    </h1>
+    <nav class="nav-links">
+      <a href="#" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h2v-2H3v2zm4 0h14v-2H7v2zM3 17h2v-2H3v2zm4 0h14v-2H7v2zM3 9h2V7H3v2zm4 0h14V7H7v2z"/></svg>
+        Produtos
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v2H4V4zm0 4h16v2H4V8zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"/></svg>
+        Movimentações
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Usuários
+      </a>
+      <a href="#">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a2 2 0 0 1 2 2v1h-4v-1a2 2 0 0 1 2-2zm-6 7v-1h12v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zm14-9h-4v2h4v-2zm-6 12h-4v2h4v-2z"/></svg>
+        Configurações
+      </a>
+    </nav>
+    <div class="section-label">Relatórios</div>
+    <nav class="nav-links">
+      <a href="#">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+        Exportar Dados
+      </a>
+    </nav>
+  </aside>
+  <main class="main-content" role="main">
+    <div class="header">
+      <div class="search-input" role="search">
+        <input type="search" placeholder="Buscar produtos, categorias..." aria-label="Buscar produtos, categorias" />
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </div>
+      <div class="header-buttons">
+        <button class="btn" type="button">+ Novo Produto</button>
+        <button class="btn" type="button">Filtros</button>
+        <button class="btn" type="button">Exportar</button>
+      </div>
+    </div>
+    <section class="table-container" aria-label="Estoque de Produtos">
+      <div class="filters" role="group" aria-label="Filtros de categoria, local e status">
+        <button class="filter-btn" type="button">Categoria: Todas</button>
+        <button class="filter-btn" type="button">Local: Todos</button>
+        <button class="filter-btn" type="button">Status: Ativos</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Categoria</th>
+            <th>Local</th>
+            <th>Qtd Atual</th>
+            <th>Qtd Mínima</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="product-table-body">
+          <tr>
+            <td>PRD-001</td>
+            <td>Parafuso 10mm</td>
+            <td>Ferragens</td>
+            <td>Estante A1</td>
+            <td>240</td>
+            <td>50</td>
+            <td class="actions">
+              <button class="btn-edit" type="button">Editar</button>
+              <button class="btn-move" type="button">Movimentar</button>
+            </td>
+          </tr>
+          <tr>
+            <td>PRD-002</td>
+            <td>Porca 10mm</td>
+            <td>Ferragens</td>
+            <td>Estante A1</td>
+            <td>120</td>
+            <td>40</td>
+            <td class="actions">
+              <button class="btn-edit" type="button">Editar</button>
+              <button class="btn-move" type="button">Movimentar</button>
+            </td>
+          </tr>
+          <tr>
+            <td>PRD-003</td>
+            <td>Luvas de segurança</td>
+            <td>EPI</td>
+            <td>Estante B2</td>
+            <td>
+              35<br />
+              <small style="color:#6366f1;">Abaixo do mínimo</small>
+            </td>
+            <td>60</td>
+            <td class="actions">
+              <button class="btn-edit" type="button">Editar</button>
+              <button class="btn-move" type="button">Movimentar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination" role="navigation" aria-label="Paginação">
+        <button type="button">Anterior</button>
+        <span class="current-page" aria-current="page">Página 1 de 12</span>
+        <button type="button">Próxima</button>
+      </div>
+    </section>
+    </main>
+
+
+  <!-- Seção Usuários (inicialmente oculta) -->
+  <section id="usuarios-section" style="display:none; padding: 1rem 2rem;">
+    <h2>Usuários</h2>
+    <button id="add-user-btn" class="btn" type="button" style="margin-bottom: 1rem;">+ Novo Usuário</button>
+    <table id="users-table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Função</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        <!-- Usuários serão carregados aqui -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Seção Movimentações (inicialmente oculta) -->
+  <section id="movimentacoes-section" style="display:none; padding: 1rem 2rem;">
+      <div class="search-input" role="search" style="max-width: 400px;">
+        <input type="search" placeholder="Buscar movimentações, produtos..." aria-label="Buscar movimentações, produtos" />
+        <svg viewBox="0 0 24 24" aria-hidden="true" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; fill: #9ca3af;">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </div>
+    </div>
+    <div style="display: flex; gap: 2rem;">
+      <div style="flex: 1; background: #ffffff; border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);">
+        <h2>Registrar Movimentação <small style="float:right; font-weight: 600; font-size: 0.8rem; color: #6b7280;">Passo 1 de 1</small></h2>
+        <form id="movimentacao-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div style="display: flex; gap: 1rem;">
+            <label style="flex: 1;">
+              Produto
+              <input type="text" id="mov-produto" readonly style="background: #f9fafb; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db; width: 100%;" />
+            </label>
+            <label style="flex: 1;">
+              Tipo
+              <select id="mov-tipo" style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db; width: 100%;">
+                <option value="Saída">Saída</option>
+                <option value="Entrada">Entrada</option>
+              </select>
+            </label>
+          </div>
+          <div style="display: flex; gap: 1rem;">
+            <label style="flex: 1;">
+              Quantidade
+              <input type="number" id="mov-quantidade" min="1" required style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db; width: 100%;" />
+            </label>
+            <label style="flex: 1;">
+              Local
+              <input type="text" id="mov-local" style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db; width: 100%;" />
+            </label>
+          </div>
+          <label style="grid-column: span 2;">
+            Observações
+            <textarea id="mov-observacoes" rows="3" style="padding: 0.5rem; border-radius: 0.375rem; border: 1px solid #d1d5db; width: 100%;"></textarea>
+          </label>
+          <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 1rem;">
+            <button type="reset" class="btn" style="background: #e0e7ff; color: #4338ca;">Limpar</button>
+            <button type="submit" class="btn" style="background: #14b8a6; color: white;">Salvar Movimentação</button>
+          </div>
+        </form>
+        <h3>Resumo do Produto</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;">
+          <div style="background: #e0e7ff; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; color: #4338ca;">
+            Qtd Atual<br /><span id="resumo-qtd-atual" style="font-size: 1.25rem;">0</span>
+          </div>
+          <div style="background: #e0e7ff; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; color: #4338ca;">
+            Qtd Mínima<br /><span id="resumo-qtd-minima" style="font-size: 1.25rem;">0</span>
+          </div>
+          <div style="background: #e0e7ff; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; color: #4338ca;">
+            Local<br /><span id="resumo-local" style="font-size: 1.25rem;">-</span>
+          </div>
+          <div style="background: #e0e7ff; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; color: #4338ca;">
+            Categoria<br /><span id="resumo-categoria" style="font-size: 1.25rem;">-</span>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 1; background: #ffffff; border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);">
+        <h2>Histórico Recentes</h2>
+        <label for="filtro-historico">Filtro: Últimos 30 dias</label>
+        <table id="movimentacoes-table" style="width: 100%; border-collapse: collapse; margin-top: 0.5rem;">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Qtd</th>
+            </tr>
+          </thead>
+          <tbody id="movimentacoes-table-body">
+            <!-- Movimentações serão carregadas aqui -->
+          </tbody>
+        </table>
+        <div class="pagination" role="navigation" aria-label="Paginação">
+          <button id="mov-prev-btn" type="button">Anterior</button>
+          <span id="mov-current-page" aria-current="page">Página 1 de 1</span>
+          <button id="mov-next-btn" type="button">Próxima</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seção Configurações (inicialmente oculta) -->
+  <section id="configuracoes-section" style="display:none; padding: 1rem 2rem;">
+    <h2>Configurações</h2>
+    <p>Configurações do sistema (placeholder).</p>
+    <button class="btn" type="button">Salvar Configurações</button>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

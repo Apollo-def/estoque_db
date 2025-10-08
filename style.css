@@ -1,0 +1,324 @@
+/* Estilos gerais */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
+  color: #374151;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar esquerda */
+.sidebar {
+  width: 250px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.sidebar h1 {
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar h1 svg {
+  width: 24px;
+  height: 24px;
+  fill: #4f46e5;
+}
+
+.nav-links {
+  flex-grow: 1;
+}
+
+.nav-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  color: #6b7280;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-links a.active,
+.nav-links a:hover {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.nav-links a svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.section-label {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Conteúdo principal */
+.main-content {
+  flex-grow: 1;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Cabeçalho */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex-grow: 1;
+  max-width: 400px;
+  position: relative;
+}
+
+.search-input input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  outline-offset: 2px;
+}
+
+.search-input svg {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  fill: #9ca3af;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background-color: #e0e7ff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  color: #4338ca;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn:hover {
+  background-color: #c7d2fe;
+}
+
+/* Container da tabela */
+.table-container {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  padding: 1rem 1.5rem 2rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+/* Filtros */
+.filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background-color: #f3f4f6;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.filter-btn:hover {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+/* Tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+th {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+td.actions {
+  white-space: normal;
+}
+
+.btn-edit {
+  background-color: #f3f4f6;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btn-edit:hover {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.btn-move {
+  background-color: #e0e7ff;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #4338ca;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-move:hover {
+  background-color: #c7d2fe;
+}
+
+/* Paginação */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.pagination button {
+  background-color: #f3f4f6;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pagination button:hover {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.pagination .current-page {
+  background-color: #e0e7ff;
+  color: #4338ca;
+  cursor: default;
+}
+
+/* Sidebar direita */
+.sidebar-right {
+  width: 220px;
+  background-color: #ffffff;
+  border-left: 1px solid #e5e7eb;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-right h2 {
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.quick-action-btn {
+  background-color: #0f766e;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.quick-action-btn:hover {
+  background-color: #115e59;
+}
+
+.quick-action-secondary {
+  background-color: #0e7490;
+}
+
+.quick-action-secondary:hover {
+  background-color: #0c4a6e;
+}
+
+.quick-action-link {
+  background: none;
+  border: none;
+  color: #374151;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: left;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.quick-action-link:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
