@@ -1,12 +1,23 @@
-// server.js - Servidor backend para o Sistema de Gerenciamento de Estoque
-// Este arquivo configura um servidor Express.js que fornece APIs para gerenciamento de estoque,
-// autenticação de usuários e relatórios, utilizando MySQL como banco de dados.
+/**
+ * Sistema de Gerenciamento para Mercearia
+ * 
+ * Este arquivo implementa o servidor backend usando Express.js, fornecendo APIs para:
+ * - Gerenciamento de produtos e estoque
+ * - Controle de vendas e preços
+ * - Autenticação de usuários e controle de acesso
+ * - Relatórios financeiros e de estoque
+ * - Gestão de validade de produtos
+ * 
+ * Banco de dados: MySQL
+ * Autenticação: JWT + bcrypt
+ * CORS: Habilitado para desenvolvimento local
+ */
 
-// Importações de módulos necessários
-const express = require('express'); // Framework web para Node.js
-const mysql = require('mysql2/promise'); // Cliente MySQL para Node.js com suporte a Promises
-const bodyParser = require('body-parser'); // Middleware para parsing de JSON no corpo das requisições
-const cors = require('cors'); // Middleware para habilitar CORS (Cross-Origin Resource Sharing)
+// Importações principais
+const express = require('express');     // Framework web
+const mysql = require('mysql2/promise'); // Driver MySQL com suporte a async/await
+const bodyParser = require('body-parser'); // Parser para requisições JSON
+const cors = require('cors');            // Middleware CORS para desenvolvimento
 
 const path = require('path'); // Módulo para manipulação de caminhos de arquivos
 // Carrega variáveis de ambiente de um arquivo .env se existir
@@ -125,9 +136,39 @@ async function initializeDb() {
       categoria VARCHAR(255),
       fornecedor VARCHAR(255),
       validade DATE,
+      preco_custo DECIMAL(10,2),
+      preco_venda DECIMAL(10,2),
+      codigo_barras VARCHAR(50),
+      unidade_medida VARCHAR(20),
+      peso_volume VARCHAR(50),
+      marca VARCHAR(255),
       localizacao VARCHAR(255)
     )
   `);
+
+  // Garantir que todas as colunas existam no estoque (ALTER se necessário, compatível com MySQL antigo)
+  const columnsToAdd = [
+    { name: 'preco_custo', def: 'DECIMAL(10,2)' },
+    { name: 'preco_venda', def: 'DECIMAL(10,2)' },
+    { name: 'codigo_barras', def: 'VARCHAR(50)' },
+    { name: 'unidade_medida', def: 'VARCHAR(20)' },
+    { name: 'peso_volume', def: 'VARCHAR(50)' },
+    { name: 'marca', def: 'VARCHAR(255)' },
+    { name: 'localizacao', def: 'VARCHAR(255)' }
+  ];
+  for (const col of columnsToAdd) {
+    try {
+      const [existing] = await pool.query(`SHOW COLUMNS FROM estoque LIKE '${col.name}'`);
+      if (existing.length === 0) {
+        await pool.query(`ALTER TABLE estoque ADD COLUMN ${col.name} ${col.def}`);
+        console.log(`Coluna ${col.name} adicionada em estoque.`);
+      } else {
+        console.log(`Coluna ${col.name} já existe em estoque.`);
+      }
+    } catch (err) {
+      console.warn(`Aviso ao verificar/adicionar coluna ${col.name}:`, err.message);
+    }
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS relatorio (
@@ -142,6 +183,17 @@ async function initializeDb() {
 
   // Após garantir tabelas, garantir o usuário admin
   await ensureAdminUser();
+
+  // Seed dados de teste no estoque se vazio
+  const [estoqueRows] = await pool.query('SELECT COUNT(*) as cnt FROM estoque');
+  if (estoqueRows[0].cnt === 0) {
+    await pool.query(`
+      INSERT INTO estoque (nome, quantidade, qtd_minima, categoria, fornecedor, localizacao) VALUES
+      ('Arroz', 50, 10, 'Alimentos', 'Fornecedor A', 'Prateleira 1'),
+      ('Feijão', 30, 5, 'Alimentos', 'Fornecedor B', 'Prateleira 2')
+    `);
+    console.log('Dados de teste adicionados ao estoque.');
+  }
 }
 
 // Seed: criar usuário admin padrão se não existir (valores podem vir do .env)
@@ -288,101 +340,304 @@ app.delete('/api/users/:username', async (req, res) => {
 });
 
 // Adicionar ou atualizar item no estoque
+// Valida entrada básica e adiciona/atualiza produto no banco
 app.post('/api/estoque', async (req, res) => {
-  const { nome, quantidade, qtd_minima, categoria, fornecedor, validade, localizacao } = req.body;
+  const {
+    nome, quantidade, qtd_minima, categoria, fornecedor, validade,
+    preco_custo, preco_venda, codigo_barras, unidade_medida,
+    peso_volume, marca, localizacao
+  } = req.body;
+
+  // Validação básica de entrada
   if (!nome || quantidade == null) {
-    return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+    return res.status(400).json({ error: 'Campos obrigatórios faltando: nome e quantidade' });
   }
+  if (typeof quantidade !== 'number' || quantidade < 0) {
+    return res.status(400).json({ error: 'Quantidade deve ser um número positivo' });
+  }
+  if (qtd_minima != null && (typeof qtd_minima !== 'number' || qtd_minima < 0)) {
+    return res.status(400).json({ error: 'Quantidade mínima deve ser um número positivo ou nulo' });
+  }
+  if (preco_custo != null && (typeof preco_custo !== 'number' || preco_custo < 0)) {
+    return res.status(400).json({ error: 'Preço de custo deve ser um número positivo ou nulo' });
+  }
+  if (preco_venda != null && (typeof preco_venda !== 'number' || preco_venda < 0)) {
+    return res.status(400).json({ error: 'Preço de venda deve ser um número positivo ou nulo' });
+  }
+  if (validade && isNaN(Date.parse(validade))) {
+    return res.status(400).json({ error: 'Data de validade inválida' });
+  }
+
+  // Handle empty strings as null for optional fields
+  const safePrecoCusto = preco_custo === '' || preco_custo == null ? null : preco_custo;
+  const safePrecoVenda = preco_venda === '' || preco_venda == null ? null : preco_venda;
+
+  // Format date from 'dd/mm/yyyy' to 'yyyy-mm-dd' for MySQL
+  let formattedValidade = null;
+  if (validade && validade !== '') {
+    const parts = validade.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      formattedValidade = `${year}-${month}-${day}`;
+      // Validate formatted date
+      if (isNaN(Date.parse(formattedValidade))) {
+        return res.status(400).json({ error: 'Data de validade inválida' });
+      }
+    } else {
+      formattedValidade = validade; // Fallback if already in correct format
+    }
+  }
+  const safeValidade = formattedValidade;
+
   try {
     const [rows] = await pool.query('SELECT id FROM estoque WHERE nome = ?', [nome]);
     if (rows.length === 1) {
-      await pool.query('UPDATE estoque SET quantidade = quantidade + ?, qtd_minima = ?, categoria = ?, fornecedor = ?, validade = ?, localizacao = ? WHERE nome = ?', [quantidade, qtd_minima || 0, categoria, fornecedor, validade, localizacao, nome]);
+      // Atualizar item existente: adicionar à quantidade e atualizar outros campos
+      await pool.query(
+        `UPDATE estoque SET
+          quantidade = quantidade + ?,
+          qtd_minima = ?,
+          categoria = ?,
+          fornecedor = ?,
+          validade = ?,
+          preco_custo = ?,
+          preco_venda = ?,
+          codigo_barras = ?,
+          unidade_medida = ?,
+          peso_volume = ?,
+          marca = ?,
+          localizacao = ?
+        WHERE nome = ?`,
+        [
+          quantidade,
+          qtd_minima || 0,
+          categoria || null,
+          fornecedor || null,
+          safeValidade,
+          safePrecoCusto,
+          safePrecoVenda,
+          codigo_barras || null,
+          unidade_medida || null,
+          peso_volume || null,
+          marca || null,
+          localizacao || null,
+          nome
+        ]
+      );
     } else {
-      await pool.query('INSERT INTO estoque (nome, quantidade, qtd_minima, categoria, fornecedor, validade, localizacao) VALUES (?, ?, ?, ?, ?, ?, ?)', [nome, quantidade, qtd_minima || 0, categoria, fornecedor, validade, localizacao]);
+      // Inserir novo item
+      await pool.query(
+        `INSERT INTO estoque (
+          nome, quantidade, qtd_minima, categoria, fornecedor, validade,
+          preco_custo, preco_venda, codigo_barras, unidade_medida,
+          peso_volume, marca, localizacao
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          nome,
+          quantidade,
+          qtd_minima || 0,
+          categoria || null,
+          fornecedor || null,
+          safeValidade,
+          safePrecoCusto,
+          safePrecoVenda,
+          codigo_barras || null,
+          unidade_medida || null,
+          peso_volume || null,
+          marca || null,
+          localizacao || null
+        ]
+      );
     }
+    // Resposta de sucesso (movida para fora do if-else para cobrir ambos os casos)
     res.json({ message: 'Item adicionado/atualizado com sucesso' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro no servidor' });
+    console.error('Erro em POST /api/estoque:', err);
+    res.status(500).json({ error: 'Erro no servidor: ' + err.message });
   }
 });
 
-// Obter estoque
+// Obter lista completa de itens no estoque
 app.get('/api/estoque', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM estoque');
     res.json(rows);
   } catch (err) {
+    console.error('Erro em GET /api/estoque:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-// Remover item do estoque
+// Remover item do estoque pelo nome
 app.delete('/api/estoque/:nome', async (req, res) => {
   const nome = req.params.nome;
+  if (!nome) {
+    return res.status(400).json({ error: 'Nome do produto é obrigatório' });
+  }
   try {
-    await pool.query('DELETE FROM estoque WHERE nome = ?', [nome]);
+    const [result] = await pool.query('DELETE FROM estoque WHERE nome = ?', [nome]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Produto não encontrado' });
+    }
     res.json({ message: 'Item removido com sucesso' });
   } catch (err) {
+    console.error('Erro em DELETE /api/estoque/:nome:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-// Editar item do estoque
 app.put('/api/estoque/:nome', async (req, res) => {
   const nome = req.params.nome;
-  const { nome: novoNome, quantidade, qtd_minima, categoria, fornecedor, localizacao } = req.body;
+  const {
+    nome: novoNome, quantidade, qtd_minima, categoria, fornecedor, localizacao,
+    validade, preco_custo, preco_venda, codigo_barras, unidade_medida,
+    peso_volume, marca
+  } = req.body;
+  if (!nome) {
+    return res.status(400).json({ error: 'Nome do produto é obrigatório' });
+  }
+  // Validação básica
+  if (quantidade != null && (typeof quantidade !== 'number' || quantidade < 0)) {
+    return res.status(400).json({ error: 'Quantidade deve ser um número positivo' });
+  }
+  if (qtd_minima != null && (typeof qtd_minima !== 'number' || qtd_minima < 0)) {
+    return res.status(400).json({ error: 'Quantidade mínima deve ser um número positivo' });
+  }
+  if (preco_custo != null && (typeof preco_custo !== 'number' || preco_custo < 0)) {
+    return res.status(400).json({ error: 'Preço de custo deve ser um número positivo' });
+  }
+  if (preco_venda != null && (typeof preco_venda !== 'number' || preco_venda < 0)) {
+    return res.status(400).json({ error: 'Preço de venda deve ser um número positivo' });
+  }
+  if (validade && isNaN(Date.parse(validade))) {
+    return res.status(400).json({ error: 'Data de validade inválida' });
+  }
+
+  // Handle empty strings as null
+  const safePrecoCusto = preco_custo === '' || preco_custo == null ? null : preco_custo;
+  const safePrecoVenda = preco_venda === '' || preco_venda == null ? null : preco_venda;
+
+  // Format date from 'dd/mm/yyyy' to 'yyyy-mm-dd' for MySQL
+  let formattedValidade = null;
+  if (validade && validade !== '') {
+    const parts = validade.split('/');
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      formattedValidade = `${year}-${month}-${day}`;
+      // Validate formatted date
+      if (isNaN(Date.parse(formattedValidade))) {
+        return res.status(400).json({ error: 'Data de validade inválida' });
+      }
+    } else {
+      formattedValidade = validade; // Fallback if already in correct format
+    }
+  }
+  const safeValidade = formattedValidade;
+
   try {
-    const [rows] = await pool.query('SELECT id FROM estoque WHERE nome = ?', [nome]);
+    const [rows] = await pool.query('SELECT * FROM estoque WHERE nome = ?', [nome]);
     if (rows.length !== 1) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
+    const existing = rows[0];
+    // Verificar conflito de nome se novoNome for fornecido
+    if (novoNome && novoNome !== nome) {
+      const [existingName] = await pool.query('SELECT id FROM estoque WHERE nome = ?', [novoNome]);
+      if (existingName.length > 0) {
+        return res.status(409).json({ error: 'Nome do produto já em uso' });
+      }
+    }
     await pool.query(
-      'UPDATE estoque SET nome = ?, quantidade = ?, qtd_minima = ?, categoria = ?, fornecedor = ?, localizacao = ? WHERE nome = ?',
-      [novoNome, quantidade, qtd_minima, categoria, fornecedor, localizacao, nome]
+      `UPDATE estoque SET
+        nome = ?,
+        quantidade = COALESCE(?, quantidade),
+        qtd_minima = COALESCE(?, qtd_minima),
+        categoria = COALESCE(?, categoria),
+        fornecedor = COALESCE(?, fornecedor),
+        localizacao = COALESCE(?, localizacao),
+        validade = ?,
+        preco_custo = ?,
+        preco_venda = ?,
+        codigo_barras = COALESCE(?, codigo_barras),
+        unidade_medida = COALESCE(?, unidade_medida),
+        peso_volume = COALESCE(?, peso_volume),
+        marca = COALESCE(?, marca)
+      WHERE nome = ?`,
+      [
+        novoNome || nome,
+        quantidade,
+        qtd_minima,
+        categoria,
+        fornecedor,
+        localizacao,
+        safeValidade || existing.validade,
+        safePrecoCusto || existing.preco_custo,
+        safePrecoVenda || existing.preco_venda,
+        codigo_barras,
+        unidade_medida,
+        peso_volume,
+        marca,
+        nome
+      ]
     );
     res.json({ message: 'Produto editado com sucesso' });
   } catch (err) {
-    res.status(500).json({ error: 'Erro no servidor' });
+    console.error('Erro em PUT /api/estoque/:nome:', err);
+    res.status(500).json({ error: 'Erro no servidor: ' + err.message });
   }
 });
 
-// Registrar retirada no relatório e atualizar estoque
+// Registrar retirada de produto: atualiza estoque e registra no relatório
 app.post('/api/retirada', async (req, res) => {
   const { nome, quantidade, responsavel, motivo } = req.body;
-  if (!nome || !quantidade || !responsavel || !motivo) {
-    return res.status(400).json({ error: 'Campos obrigatórios faltando' });
+  if (!nome || quantidade == null || !responsavel || !motivo) {
+    return res.status(400).json({ error: 'Campos obrigatórios faltando: nome, quantidade, responsavel, motivo' });
+  }
+  if (typeof quantidade !== 'number' || quantidade <= 0) {
+    return res.status(400).json({ error: 'Quantidade deve ser um número positivo' });
   }
   try {
-    // Atualizar estoque
+    // Verificar se produto existe e tem quantidade suficiente
     const [rows] = await pool.query('SELECT quantidade FROM estoque WHERE nome = ?', [nome]);
-    if (rows.length !== 1 || rows[0].quantidade < quantidade) {
+    if (rows.length !== 1) {
+      return res.status(404).json({ error: 'Produto não encontrado' });
+    }
+    if (rows[0].quantidade < quantidade) {
       return res.status(400).json({ error: 'Quantidade insuficiente no estoque' });
     }
+    // Atualizar estoque
     await pool.query('UPDATE estoque SET quantidade = quantidade - ? WHERE nome = ?', [quantidade, nome]);
     // Inserir no relatório
     await pool.query('INSERT INTO relatorio (nome, quantidade, responsavel, motivo, data) VALUES (?, ?, ?, ?, NOW())', [nome, quantidade, responsavel, motivo]);
     res.json({ message: 'Retirada registrada com sucesso' });
   } catch (err) {
+    console.error('Erro em POST /api/retirada:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-// Obter relatório de retiradas
+// Obter relatório de retiradas ordenado por data decrescente
 app.get('/api/relatorio', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM relatorio ORDER BY data DESC');
     res.json(rows);
   } catch (err) {
+    console.error('Erro em GET /api/relatorio:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });
 
-// Limpar histórico de retiradas
+// Limpar todo o histórico de retiradas (apagar todas as entradas)
 app.delete('/api/relatorio', async (req, res) => {
   try {
     await pool.query('DELETE FROM relatorio');
     res.json({ message: 'Histórico apagado com sucesso' });
   } catch (err) {
+    console.error('Erro em DELETE /api/relatorio:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });

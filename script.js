@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderTable();
       updatePagination();
     } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
       alert(error.message);
     }
   }
@@ -127,30 +128,48 @@ document.addEventListener('DOMContentLoaded', () => {
       const tr = document.createElement('tr');
 
       const codeTd = document.createElement('td');
-      codeTd.textContent = product.codigo || `PRD-${product.id.toString().padStart(3, '0')}`;
+      codeTd.textContent = product.codigo_barras || `PRD-${product.id.toString().padStart(3, '0')}`;
       tr.appendChild(codeTd);
 
       const nameTd = document.createElement('td');
       nameTd.textContent = product.nome;
+      if (product.marca) {
+        nameTd.innerHTML += `<br><small style="color:#6b7280">${product.marca}</small>`;
+      }
       tr.appendChild(nameTd);
 
       const categoryTd = document.createElement('td');
       categoryTd.textContent = product.categoria || '';
       tr.appendChild(categoryTd);
 
-      const localTd = document.createElement('td');
-      localTd.textContent = product.localizacao || '';
-      tr.appendChild(localTd);
+      const precoTd = document.createElement('td');
+      if (product.preco_venda != null && typeof product.preco_venda === 'number') {
+        precoTd.innerHTML = `R$ ${product.preco_venda.toFixed(2)}`;
+        if (product.preco_custo != null && typeof product.preco_custo === 'number') {
+          const margem = ((product.preco_venda - product.preco_custo) / product.preco_custo * 100).toFixed(1);
+          precoTd.innerHTML += `<br><small style="color:#059669">+${margem}%</small>`;
+        }
+      } else {
+        precoTd.textContent = '-';
+      }
+      tr.appendChild(precoTd);
 
-      const qtdAtualTd = document.createElement('td');
-      qtdAtualTd.innerHTML = product.quantidade < (product.qtd_minima || 0)
-        ? `${product.quantidade}<br /><small style="color:#6366f1;">Abaixo do mínimo</small>`
-        : product.quantidade;
-      tr.appendChild(qtdAtualTd);
+      const qtdTd = document.createElement('td');
+      const qtdText = `${product.quantidade} ${product.unidade_medida || 'un'}`;
+      qtdTd.innerHTML = product.quantidade < (product.qtd_minima || 0)
+        ? `${qtdText}<br><small style="color:#ef4444">Abaixo do mínimo</small>`
+        : qtdText;
+      tr.appendChild(qtdTd);
 
-      const qtdMinTd = document.createElement('td');
-      qtdMinTd.textContent = product.qtd_minima || '';
-      tr.appendChild(qtdMinTd);
+      const validadeTd = document.createElement('td');
+      if (product.validade) {
+        const validade = new Date(product.validade);
+        const hoje = new Date();
+        const diasRestantes = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
+        const cor = diasRestantes <= 7 ? '#ef4444' : diasRestantes <= 30 ? '#f59e0b' : '#10b981';
+        validadeTd.innerHTML = `${validade.toLocaleDateString('pt-BR')}<br><small style="color:${cor}">${diasRestantes} dias</small>`;
+      }
+      tr.appendChild(validadeTd);
 
       const actionsTd = document.createElement('td');
       actionsTd.classList.add('actions');
@@ -187,6 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Produto editado com sucesso!');
           fetchProducts();
         } catch (err) {
+          console.error('Erro ao editar produto:', err);
           alert(err.message);
         }
       });
@@ -217,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Produto deletado com sucesso!');
           fetchProducts();
         } catch (err) {
+          console.error('Erro ao deletar produto:', err);
           alert(err.message);
         }
       });
@@ -233,6 +254,27 @@ document.addEventListener('DOMContentLoaded', () => {
     currentPageSpan.textContent = `Página ${currentPage} de ${totalPages}`;
     prevBtn.disabled = currentPage === 1;
     nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+  }
+
+  // Pagination button handlers
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+        updatePagination();
+      }
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+        updatePagination();
+      }
+    });
   }
 
   // Filter products based on search input
@@ -257,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const users = await parseJsonSafe(response);
       renderUsersTable(users);
     } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
       alert(error.message);
     }
   }
@@ -302,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Usuário atualizado com sucesso');
           fetchUsers();
         } catch (err) {
+          console.error('Erro ao editar usuário:', err);
           alert(err.message);
         }
       });
@@ -324,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Usuário deletado com sucesso');
           fetchUsers();
         } catch (err) {
+          console.error('Erro ao deletar usuário:', err);
           alert(err.message);
         }
       });
@@ -364,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Usuário adicionado com sucesso!');
       fetchUsers();
     } catch (error) {
+      console.error('Erro ao adicionar usuário:', error);
       alert(error.message);
     }
   }
@@ -376,6 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const movimentacoes = await parseJsonSafe(response);
       renderMovimentacoesTable(movimentacoes);
     } catch (error) {
+      console.error('Erro ao carregar movimentações:', error);
       alert(error.message);
     }
   }
@@ -441,20 +488,83 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   }
 
-  // Add product event
+  // Add product event: Opens a modal form to collect product details and submits to API
   if (addProductBtn) {
     addProductBtn.addEventListener('click', () => {
-    const nome = prompt('Nome do produto:');
-    const quantidade = parseInt(prompt('Quantidade:'));
-    const qtd_minima = parseInt(prompt('Quantidade mínima:'));
-    const categoria = prompt('Categoria:');
-    const fornecedor = prompt('Fornecedor:');
-    const localizacao = prompt('Localização:');
-    if (nome && !isNaN(quantidade)) {
-      addProduct({ nome, quantidade, qtd_minima, categoria, fornecedor, localizacao });
-    } else {
-      alert('Nome e quantidade são obrigatórios.');
-    }
+      // Create modal for new product input
+      const modalHtml = `
+        <div id="produtoModal" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:1000;width:400px;">
+          <h2>Novo Produto</h2>
+          <form id="produtoForm">
+            <div style="display:grid;gap:10px;">
+              <input type="text" id="nome" placeholder="Nome do produto" required>
+              <input type="text" id="codigo_barras" placeholder="Código de barras">
+              <select id="categoria" required>
+                <option value="">Selecione a categoria</option>
+                <option value="Alimentos">Alimentos</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Limpeza">Limpeza</option>
+                <option value="Higiene">Higiene</option>
+                <option value="Hortifruti">Hortifruti</option>
+                <option value="Padaria">Padaria</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Laticínios">Laticínios</option>
+                <option value="Mercearia">Mercearia</option>
+              </select>
+              <input type="number" id="quantidade" placeholder="Quantidade" required min="0">
+              <input type="number" id="qtd_minima" placeholder="Quantidade mínima" min="0">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <input type="number" id="preco_custo" placeholder="Preço de custo" step="0.01" min="0">
+                <input type="number" id="preco_venda" placeholder="Preço de venda" step="0.01" min="0">
+              </div>
+              <input type="text" id="marca" placeholder="Marca">
+              <input type="text" id="unidade_medida" placeholder="Unidade (kg, l, un)">
+              <input type="text" id="peso_volume" placeholder="Peso/Volume">
+              <input type="text" id="fornecedor" placeholder="Fornecedor">
+              <input type="date" id="validade" placeholder="Data de validade">
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+              <button type="button" onclick="document.getElementById('produtoModal').remove()">Cancelar</button>
+              <button type="submit">Salvar</button>
+            </div>
+          </form>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      const form = document.getElementById('produtoForm');
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const produto = {
+          nome: form.nome.value,
+          codigo_barras: form.codigo_barras.value,
+          quantidade: parseInt(form.quantidade.value),
+          qtd_minima: parseInt(form.qtd_minima.value) || 0,
+          categoria: form.categoria.value,
+          preco_custo: parseFloat(form.preco_custo.value) || null,
+          preco_venda: parseFloat(form.preco_venda.value) || null,
+          marca: form.marca.value,
+          unidade_medida: form.unidade_medida.value,
+          peso_volume: form.peso_volume.value,
+          fornecedor: form.fornecedor.value,
+          validade: form.validade.value,
+          localizacao: '' // Default location if not provided
+        };
+
+        // Basic validation
+        if (!produto.nome || isNaN(produto.quantidade) || produto.quantidade < 0) {
+          alert('Nome e quantidade válida são obrigatórios.');
+          return;
+        }
+
+        try {
+          await addProduct(produto);
+          document.getElementById('produtoModal').remove();
+        } catch (err) {
+          console.error('Erro ao adicionar produto:', err);
+          alert('Erro ao adicionar produto: ' + err.message);
+        }
+      };
     });
   }
 
@@ -473,6 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Produto adicionado com sucesso!');
       fetchProducts();
     } catch (error) {
+      console.error('Erro ao adicionar produto:', error);
       alert(error.message);
     }
   }
@@ -480,49 +591,64 @@ document.addEventListener('DOMContentLoaded', () => {
   // Export button
   if (exportBtn) exportBtn.addEventListener('click', exportData);
 
-  // Quick actions
+  // Quick actions in sidebar: Handle simple prompts for stock entry/exit
   if (quickActionBtns) {
     quickActionBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-      const action = btn.textContent.trim();
-      if (action === 'Entrada de Estoque') {
-        const nome = prompt('Nome do produto:');
-        const quantidade = parseInt(prompt('Quantidade a adicionar:'));
-        const categoria = prompt('Categoria:');
-        const fornecedor = prompt('Fornecedor:');
-        const localizacao = prompt('Localização:');
-        if (nome && !isNaN(quantidade)) {
-          addProduct({ nome, quantidade, categoria, fornecedor, localizacao });
+        const action = btn.textContent.trim();
+        if (action === 'Entrada de Estoque') {
+          const nome = prompt('Nome do produto:');
+          const quantidade = parseInt(prompt('Quantidade a adicionar:'), 10);
+          const categoria = prompt('Categoria (opcional):') || null;
+          const fornecedor = prompt('Fornecedor (opcional):') || null;
+          const localizacao = prompt('Localização (opcional):') || null;
+          if (nome && !isNaN(quantidade) && quantidade > 0) {
+            addProduct({ nome, quantidade, categoria, fornecedor, localizacao });
+          } else {
+            alert('Nome e quantidade válida são obrigatórios.');
+          }
+        } else if (action === 'Saída de Estoque') {
+          const nome = prompt('Nome do produto:');
+          const quantidade = parseInt(prompt('Quantidade a retirar:'), 10);
+          const responsavel = prompt('Responsável pela saída:');
+          const motivo = prompt('Motivo da saída:');
+          if (nome && !isNaN(quantidade) && quantidade > 0 && responsavel && motivo) {
+            retirada({ nome, quantidade, responsavel, motivo });
+          } else {
+            alert('Todos os campos são obrigatórios para saída.');
+          }
         }
-      } else if (action === 'Saída de Estoque') {
-        const nome = prompt('Nome do produto:');
-        const quantidade = parseInt(prompt('Quantidade a retirar:'));
-        const responsavel = prompt('Responsável:');
-        const motivo = prompt('Motivo:');
-        if (nome && !isNaN(quantidade) && responsavel && motivo) {
-          retirada({ nome, quantidade, responsavel, motivo });
-        }
-      }
       });
     });
   }
 
-  // Repor itens
-  if (quickActionLink) quickActionLink.addEventListener('click', () => {
-    const lowItems = products.filter(p => p.quantidade < (p.qtd_minima || 0));
-    if (lowItems.length === 0) {
-      alert('Nenhum item abaixo do mínimo.');
-      return;
-    }
-    lowItems.forEach(item => {
-      const addQtd = (item.qtd_minima || 0) - item.quantidade;
-      if (addQtd > 0) {
-        addProduct({ nome: item.nome, quantidade: addQtd });
+  // Auto-replenish low stock items via quick action link
+  if (quickActionLink) {
+    quickActionLink.addEventListener('click', async () => {
+      const lowItems = products.filter(p => p.quantidade < (p.qtd_minima || 0));
+      if (lowItems.length === 0) {
+        alert('Nenhum item abaixo do mínimo.');
+        return;
+      }
+      if (!confirm(`Repor ${lowItems.length} itens abaixo do mínimo?`)) return;
+
+      try {
+        for (const item of lowItems) {
+          const addQtd = (item.qtd_minima || 0) - item.quantidade;
+          if (addQtd > 0) {
+            await addProduct({ nome: item.nome, quantidade: addQtd });
+          }
+        }
+        alert('Itens repostos com sucesso!');
+        fetchProducts(); // Refresh data
+      } catch (err) {
+        console.error('Erro ao repor itens:', err);
+        alert('Erro ao repor itens: ' + err.message);
       }
     });
-  });
+  }
 
-  // Retirada via API
+  // Perform stock withdrawal: Updates stock and logs to relatorio
   async function retirada(data) {
     try {
       const response = await fetch('/api/retirada', {
@@ -535,10 +661,14 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(errorData.error || 'Erro na retirada');
       }
       alert('Retirada registrada com sucesso!');
-      fetchProducts();
+      await fetchProducts(); // Refresh products
+      if (movimentacoesSection) { // If in movements section, refresh table
+        await fetchMovimentacoes();
+      }
     } catch (error) {
+      console.error('Erro na retirada:', error);
       alert(error.message);
-    } 
+    }
   }
 
   // Abrir formulário de movimentação para um produto (tipo: 'Entrada' ou 'Saída')
@@ -608,6 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchProducts();
         fetchMovimentacoes();
       } catch (err) {
+        console.error('Erro ao processar movimentação:', err);
         alert(err.message || 'Erro ao processar movimentação');
       }
     });

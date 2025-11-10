@@ -299,8 +299,8 @@
 <body>
   <aside class="sidebar" role="navigation" aria-label="Menu principal">
     <h1>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L2 7v7c0 5 10 8 10 8s10-3 10-8V7l-10-5z"/></svg>
-      Almoxarifado
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 17h8v-2H8v2zm0-4h8v-2H8v2zm0-4h8V7H8v2zm10 11H6c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2z"/></svg>
+      Mercearia
     </h1>
     <nav class="nav-links">
       <a href="#" class="active" aria-current="page">
@@ -322,8 +322,24 @@
     </nav>
     <div class="section-label">Relatórios</div>
     <nav class="nav-links">
-      <a href="#">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+      <a href="#" class="relatorio-vendas">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+        Vendas
+      </a>
+      <a href="#" class="relatorio-estoque">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+        Estoque
+      </a>
+      <a href="#" class="relatorio-validade">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+        Validade
+      </a>
+      <a href="#" class="relatorio-financeiro">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+        Financeiro
+      </a>
+      <a href="#" class="exportar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
         Exportar Dados
       </a>
     </nav>
@@ -352,10 +368,10 @@
             <th>Código</th>
             <th>Nome</th>
             <th>Categoria</th>
-            <th>Local</th>
-            <th>Qtd Atual</th>
-            <th>Qtd Mínima</th>
-            <th></th>
+            <th>Preço</th>
+            <th>Qtd</th>
+            <th>Validade</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody id="product-table-body">
