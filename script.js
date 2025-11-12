@@ -1191,7 +1191,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       if (!response.ok) {
         const errorData = await parseJsonSafe(response);
-        throw new Error(errorData.error || 'Erro na retirada');
       }
       alert('Retirada registrada com sucesso!');
       await fetchProducts(); // Refresh products

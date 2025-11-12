@@ -470,7 +470,7 @@ app.post('/api/estoque', async (req, res) => {
     res.json({ message: 'Item adicionado/atualizado com sucesso' });
   } catch (err) {
     console.error('Erro em POST /api/estoque:', err);
-    res.status(500).json({ error: 'Erro no servidor: ' + err.message });
+    res.status(500).json({ error: 'Erro no servidor: ' + err.message }); 
   }
 });
 
