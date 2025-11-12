@@ -14,11 +14,23 @@
     body {
       margin: 0;
       font-family: 'Inter', sans-serif;
-      background-color: #f9fafb;
+      /* Novo fundo: gradiente suave com textura sutil */
+      background: linear-gradient(180deg, #f3f4f6 0%, #eef2ff 50%, #f8fafc 100%);
       color: #374151;
       display: flex;
       height: 100vh;
       overflow: hidden;
+      background-attachment: fixed;
+    }
+    /* Adiciona um leve padrão diagonal usando pseudo-elemento para textura */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(135deg, rgba(255,255,255,0.03) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.03) 75%, transparent 75%, transparent);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
     }
     /* Sidebar */
     .sidebar {
@@ -246,12 +258,13 @@
     /* Sidebar right */
     .sidebar-right {
       width: 220px;
-      background-color: #ffffff;
-      border-left: 1px solid #e5e7eb;
+      background-color: rgba(255,255,255,0.9);
+      border-left: 1px solid rgba(226,232,240,0.6);
       padding: 1rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      backdrop-filter: blur(4px);
     }
     .sidebar-right h2 {
       font-weight: 600;
@@ -298,6 +311,7 @@
 </head>
 <body>
   <aside class="sidebar" role="navigation" aria-label="Menu principal">
+    <div style="position:relative;z-index:1;">
     <h1>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 17h8v-2H8v2zm0-4h8v-2H8v2zm0-4h8V7H8v2zm10 11H6c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2z"/></svg>
       Mercearia
@@ -316,10 +330,15 @@
         Usuários
       </a>
       <a href="#">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h2v-2H3v2zm4 0h14v-2H7v2zM3 17h2v-2H3v2zm4 0h14v-2H7v2zM3 9h2V7H3v2zm4 0h14V7H7v2z"/></svg>
+        Relatórios
+      </a>
+      <a href="#">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a2 2 0 0 1 2 2v1h-4v-1a2 2 0 0 1 2-2zm-6 7v-1h12v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zm14-9h-4v2h4v-2zm-6 12h-4v2h4v-2z"/></svg>
         Configurações
       </a>
-    </nav>
+  </nav>
+  </div>
     <div class="section-label">Relatórios</div>
     <nav class="nav-links">
       <a href="#" class="relatorio-vendas">
@@ -535,6 +554,68 @@
     <button class="btn" type="button">Salvar Configurações</button>
   </section>
 
+  <!-- Seção Relatórios (inicialmente oculta) -->
+  <section id="relatorios-section" style="display:none; padding: 1rem 2rem;">
+    <h2 style="color: var(--primary-red); border-bottom: 3px solid var(--primary-red); padding-bottom: 0.5rem; margin-bottom: 1rem;">📊 Relatórios e Análises</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+      <!-- Card Vendas -->
+      <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(232, 32, 13, 0.1); border-top: 4px solid #E8200D;">
+        <h3 style="color: #E8200D; margin-top: 0;">💰 Produtos Mais Vendidos</h3>
+        <canvas id="chart-top-sold" width="400" height="200"></canvas>
+      </div>
+
+      <!-- Card Menos Vendidos -->
+      <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(232, 32, 13, 0.1); border-top: 4px solid #0F7490;">
+        <h3 style="color: #0F7490; margin-top: 0;">📉 Produtos Menos Vendidos</h3>
+        <canvas id="chart-bottom-sold" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Estatísticas Rápidas -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+      <div style="background: linear-gradient(135deg, #E8200D, #F5504D); color: white; padding: 1.5rem; border-radius: 0.5rem; text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700;">0</div>
+        <div style="font-size: 0.875rem; margin-top: 0.5rem;">Total de Vendas</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #0F7490, #1A9FBE); color: white; padding: 1.5rem; border-radius: 0.5rem; text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700;">R$ 0,00</div>
+        <div style="font-size: 0.875rem; margin-top: 0.5rem;">Faturamento Total</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #10B981, #34D399); color: white; padding: 1.5rem; border-radius: 0.5rem; text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700;" id="stat-ticket-medio">R$ 0,00</div>
+        <div style="font-size: 0.875rem; margin-top: 0.5rem;">Ticket Médio</div>
+      </div>
+      <div style="background: linear-gradient(135deg, #F59E0B, #FBBF24); color: white; padding: 1.5rem; border-radius: 0.5rem; text-align: center;">
+        <div style="font-size: 2rem; font-weight: 700;" id="stat-margin">0%</div>
+        <div style="font-size: 0.875rem; margin-top: 0.5rem;">Margem Média</div>
+      </div>
+    </div>
+
+    <!-- Tabela Detalhada de Vendas -->
+    <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(232, 32, 13, 0.1);">
+      <h3 style="color: #595959; margin-top: 0;">📋 Histórico de Vendas</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #E8200D;">
+            <th style="padding: 0.75rem; text-align: left; color: #595959; font-weight: 600;">Produto</th>
+            <th style="padding: 0.75rem; text-align: left; color: #595959; font-weight: 600;">Qtd</th>
+            <th style="padding: 0.75rem; text-align: left; color: #595959; font-weight: 600;">Preço Unit.</th>
+            <th style="padding: 0.75rem; text-align: left; color: #595959; font-weight: 600;">Total</th>
+            <th style="padding: 0.75rem; text-align: left; color: #595959; font-weight: 600;">Vendedor</th>
+            <th style="padding: 0.75rem; text-align: left; color: #595959; font-weight: 600;">Data</th>
+          </tr>
+        </thead>
+        <tbody id="vendas-table-body">
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 1rem; color: #8A8A8A;">Carregando dados...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

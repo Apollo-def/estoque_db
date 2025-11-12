@@ -177,7 +177,22 @@ async function initializeDb() {
       quantidade INT NOT NULL,
       responsavel VARCHAR(255) NOT NULL,
       motivo VARCHAR(255) NOT NULL,
-      data DATETIME NOT NULL
+      data DATETIME NOT NULL,
+      usuario_id INT,
+      FOREIGN KEY(usuario_id) REFERENCES users(id)
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS vendas (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      produto_nome VARCHAR(255) NOT NULL,
+      quantidade INT NOT NULL,
+      preco_unitario DECIMAL(10,2),
+      preco_total DECIMAL(10,2),
+      usuario_id INT NOT NULL,
+      data DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(usuario_id) REFERENCES users(id)
     )
   `);
 
@@ -242,13 +257,13 @@ app.post('/api/login', async (req, res) => {
     return res.status(400).json({ error: 'Campos obrigatórios faltando' });
   }
   try {
-      const [rows] = await pool.query('SELECT username, password, role FROM users WHERE username = ?', [username]);
+      const [rows] = await pool.query('SELECT id, username, password, role FROM users WHERE username = ?', [username]);
     if (rows.length === 1) {
       const user = rows[0];
     const ok = await comparePassword(password, user.password);
     if (ok) {
-        // Autenticado
-        res.json({ username: user.username, role: user.role });
+        // Autenticado - retorna id, username e role
+        res.json({ id: user.id, username: user.username, role: user.role });
       } else {
         res.status(401).json({ error: 'Usuário ou senha incorretos' });
       }
@@ -264,7 +279,7 @@ app.post('/api/login', async (req, res) => {
 // Obter lista de usuários (admin)
 app.get('/api/users', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT username, role FROM users');
+    const [rows] = await pool.query('SELECT id, username, role FROM users');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Erro no servidor' });
@@ -593,7 +608,7 @@ app.put('/api/estoque/:nome', async (req, res) => {
 
 // Registrar retirada de produto: atualiza estoque e registra no relatório
 app.post('/api/retirada', async (req, res) => {
-  const { nome, quantidade, responsavel, motivo } = req.body;
+  const { nome, quantidade, responsavel, motivo, usuario_id } = req.body;
   if (!nome || quantidade == null || !responsavel || !motivo) {
     return res.status(400).json({ error: 'Campos obrigatórios faltando: nome, quantidade, responsavel, motivo' });
   }
@@ -612,7 +627,7 @@ app.post('/api/retirada', async (req, res) => {
     // Atualizar estoque
     await pool.query('UPDATE estoque SET quantidade = quantidade - ? WHERE nome = ?', [quantidade, nome]);
     // Inserir no relatório
-    await pool.query('INSERT INTO relatorio (nome, quantidade, responsavel, motivo, data) VALUES (?, ?, ?, ?, NOW())', [nome, quantidade, responsavel, motivo]);
+    await pool.query('INSERT INTO relatorio (nome, quantidade, responsavel, motivo, data, usuario_id) VALUES (?, ?, ?, ?, NOW(), ?)', [nome, quantidade, responsavel, motivo, usuario_id || null]);
     res.json({ message: 'Retirada registrada com sucesso' });
   } catch (err) {
     console.error('Erro em POST /api/retirada:', err);
@@ -638,6 +653,116 @@ app.delete('/api/relatorio', async (req, res) => {
     res.json({ message: 'Histórico apagado com sucesso' });
   } catch (err) {
     console.error('Erro em DELETE /api/relatorio:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// ===== ENDPOINTS DE VENDAS =====
+
+// Registrar uma venda
+app.post('/api/vendas', async (req, res) => {
+  const { produto_nome, quantidade, preco_unitario, usuario_id } = req.body;
+  if (!produto_nome || !quantidade || !usuario_id) {
+    return res.status(400).json({ error: 'Campos obrigatórios faltando: produto_nome, quantidade, usuario_id' });
+  }
+  try {
+    const preco_total = (parseFloat(preco_unitario) || 0) * quantidade;
+    await pool.query(
+      'INSERT INTO vendas (produto_nome, quantidade, preco_unitario, preco_total, usuario_id) VALUES (?, ?, ?, ?, ?)',
+      [produto_nome, quantidade, preco_unitario || null, preco_total, usuario_id]
+    );
+    res.json({ message: 'Venda registrada com sucesso' });
+  } catch (err) {
+    console.error('Erro em POST /api/vendas:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Obter lista de vendas
+app.get('/api/vendas', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM vendas ORDER BY data DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro em GET /api/vendas:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Obter vendas por usuário (usuários normais só veem suas próprias vendas)
+app.get('/api/vendas/usuario/:usuario_id', async (req, res) => {
+  const usuario_id = req.params.usuario_id;
+  try {
+    const [rows] = await pool.query('SELECT * FROM vendas WHERE usuario_id = ? ORDER BY data DESC', [usuario_id]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Erro em GET /api/vendas/usuario/:usuario_id:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Deletar venda (apenas o owner ou admin podem deletar)
+app.delete('/api/vendas/:id', async (req, res) => {
+  const id = req.params.id;
+  const usuario_id = req.body.usuario_id;
+  const userRole = req.body.role;
+
+  try {
+    const [venda] = await pool.query('SELECT usuario_id FROM vendas WHERE id = ?', [id]);
+    if (venda.length === 0) {
+      return res.status(404).json({ error: 'Venda não encontrada' });
+    }
+
+    // Apenas o owner ou admin pode deletar
+    if (userRole !== 'admin' && venda[0].usuario_id !== parseInt(usuario_id)) {
+      return res.status(403).json({ error: 'Você não tem permissão para deletar esta venda' });
+    }
+
+    await pool.query('DELETE FROM vendas WHERE id = ?', [id]);
+    res.json({ message: 'Venda deletada com sucesso' });
+  } catch (err) {
+    console.error('Erro em DELETE /api/vendas/:id:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Obter estatísticas de vendas (produtos mais vendidos)
+app.get('/api/vendas/stats/top', async (req, res) => {
+  try {
+    const [topSold] = await pool.query(
+      'SELECT produto_nome, SUM(quantidade) as total_vendas, COUNT(*) as num_vendas FROM vendas GROUP BY produto_nome ORDER BY total_vendas DESC LIMIT 10'
+    );
+    res.json(topSold);
+  } catch (err) {
+    console.error('Erro em GET /api/vendas/stats/top:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Obter estatísticas de vendas (produtos menos vendidos)
+app.get('/api/vendas/stats/bottom', async (req, res) => {
+  try {
+    const [bottomSold] = await pool.query(
+      'SELECT produto_nome, SUM(quantidade) as total_vendas FROM estoque LEFT JOIN vendas ON estoque.nome = vendas.produto_nome GROUP BY estoque.nome ORDER BY COALESCE(SUM(vendas.quantidade), 0) ASC LIMIT 10'
+    );
+    res.json(bottomSold);
+  } catch (err) {
+    console.error('Erro em GET /api/vendas/stats/bottom:', err);
+    res.status(500).json({ error: 'Erro no servidor' });
+  }
+});
+
+// Obter nome do usuário pelo ID
+app.get('/api/users/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const [rows] = await pool.query('SELECT username FROM users WHERE id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    res.json({ username: rows[0].username });
+  } catch (err) {
+    console.error('Erro em GET /api/users/:id:', err);
     res.status(500).json({ error: 'Erro no servidor' });
   }
 });

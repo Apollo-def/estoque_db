@@ -111,6 +111,30 @@ node server.js
 5. **Usuários (Admin):** Gerencie contas em "Usuários".
 6. **Exportar:** Baixe CSV em "Exportar Dados".
 
+### Como usar os novos controles de Relatórios
+
+As seções de Relatórios (acessíveis pelo menu lateral > Relatórios) receberam controles interativos para facilitar a análise:
+
+- **Vendas**: carrega gráficos (mais vendidos/menos vendidos), estatísticas e a tabela de histórico de vendas. Use esta seção para visualizar desempenho comercial.
+
+- **Estoque**: contém agora uma barra de busca (por nome ou categoria), um seletor de categoria (preenchido automaticamente) e paginação. Como usar:
+  - Clique em "Estoque" dentro da área "Relatórios".
+  - Use o campo de busca para filtrar por nome do produto ou categoria.
+  - Selecione uma categoria no menu para ver só produtos daquela categoria.
+  - Use os botões "Anterior" / "Próxima" para navegar entre páginas (10 itens por página).
+
+- **Validade**: lista itens com data de validade registrada, ordenados pelos que vencem primeiro. Mostra também os dias restantes até a validade.
+
+- **Financeiro**: inclui filtros de data (De / Até) e paginação para a tabela de vendas.
+  - Defina um intervalo de datas e clique em "Aplicar" para filtrar as vendas.
+  - Os cartões mostram Total de Vendas, Faturamento e Ticket Médio atualizados conforme o filtro.
+  - A tabela tem paginação (10 itens por página) com controles "Anterior" / "Próxima".
+
+Observações:
+- Os relatórios são carregados a partir das APIs do backend (`/api/estoque`, `/api/vendas`, etc.). Se algum relatório não aparecer, verifique se o servidor está rodando em `http://localhost:3000` e confira o console do navegador para mensagens de erro (CORS, JSON inválido ou erro 500).
+- A opção **Exportar Dados** reutiliza a função de exportação que gera um arquivo CSV com os itens do estoque atualmente carregados no frontend.
+
+
 **Exemplo de Fluxo:**
 - Login: admin / 1234
 - Adicione "Arroz" (quantidade: 50, categoria: Alimentos, validade: 31/12/2025, preco_custo: 5.00, preco_venda: 10.00).
