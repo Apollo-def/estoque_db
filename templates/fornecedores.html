@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Fornecedores - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-truck me-2"></i>Fornecedores</h2>
+            {% if session.user_tipo in ['admin', 'gerente'] %}
+            <a href="{{ url_for('novo_fornecedor') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Novo Fornecedor
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                {% if fornecedores %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Contato</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                {% if session.user_tipo in ['admin', 'gerente'] %}
+                                <th>Ações</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fornecedor in fornecedores %}
+                            <tr>
+                                <td>{{ fornecedor.id }}</td>
+                                <td>{{ fornecedor.nome }}</td>
+                                <td>{{ fornecedor.contato or '-' }}</td>
+                                <td>{{ fornecedor.telefone or '-' }}</td>
+                                <td>{{ fornecedor.email or '-' }}</td>
+                                {% if session.user_tipo in ['admin', 'gerente'] %}
+                                <td>
+                                    <a href="{{ url_for('editar_fornecedor', id=fornecedor.id) }}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ url_for('excluir_fornecedor', id=fornecedor.id) }}" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Tem certeza que deseja excluir este fornecedor?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum fornecedor cadastrado</h4>
+                    {% if session.user_tipo in ['admin', 'gerente'] %}
+                    <p class="text-muted">Clique em "Novo Fornecedor" para adicionar o primeiro.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

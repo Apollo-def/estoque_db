@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Selecionar Unidade - Sistema Hospitalar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-hospital me-2"></i>
+                    Selecione a Unidade Hospitalar
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <p class="text-muted">
+                            Bem-vindo, <strong>{{ session.user_nome }}</strong>! 
+                            Selecione uma unidade abaixo para acessar o sistema de estoque.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            Sair
+                        </a>
+                    </div>
+                </div>
+
+                {% if unidades %}
+                <div class="row">
+                    {% for unit_id, unit_config in unidades.items() %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 border-primary hover-card">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-hospital-alt fa-3x text-primary"></i>
+                                </div>
+                                <h5 class="card-title">{{ unit_config.name }}</h5>
+                                <p class="card-text text-muted small">{{ unit_config.description }}</p>
+                                <div class="mb-3">
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-circle me-1"></i>
+                                        Online
+                                    </span>
+                                </div>
+                                <form method="POST" action="{{ url_for('selecionar_unidade') }}">
+                                    <input type="hidden" name="unit_id" value="{{ unit_id }}">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Acessar Unidade
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Nenhuma unidade disponível para o seu usuário.
+                    <br>
+                    <small>Entre em contato com o administrador do sistema.</small>
+                </div>
+                {% endif %}
+
+                <!-- Informações do Usuário -->
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-user-circle me-2"></i>
+                                    Informações do Acesso
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <strong>Usuário:</strong><br>
+                                        {{ session.user_nome }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Email:</strong><br>
+                                        {{ session.user_email }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Tipo de Acesso:</strong><br>
+                                        {% if session.user_tipo == 'admin' %}
+                                        <span class="badge bg-primary">Administrador</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Usuário</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.hover-card .btn-primary {
+    transition: all 0.3s ease;
+}
+
+.hover-card:hover .btn-primary {
+    transform: scale(1.05);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+}
+
+.fa-hospital-alt {
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+.hover-card:hover .fa-hospital-alt {
+    opacity: 1;
+    transform: scale(1.1);
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

@@ -1,224 +1,316 @@
-# Sistema de Gerenciamento de Estoque para Mercearia
+# Sistema Multi-Tenant de Controle de Estoque Hospitalar
 
-![Banner](https://via.placeholder.com/800x200/4F46E5/FFFFFF?text=Sistema+de+Mercearia) <!-- Placeholder para banner; substitua por imagem real se disponível -->
+Um sistema web completo para gestão de estoque hospitalar com arquitetura multi-tenant, desenvolvido com Flask, Bootstrap e SQLite.
 
-## Descrição
+## 🚀 Funcionalidades
 
-O **Sistema de Gerenciamento de Estoque para Mercearia** é uma aplicação web completa e responsiva desenvolvida para facilitar o controle de estoque em pequenas e médias mercearias. Ele permite o registro e login de usuários, gerenciamento de produtos (adicionar, editar, excluir), controle de movimentações (entradas e saídas), relatórios de estoque e exportação de dados. 
+### Gestão de Usuários
+- ✅ Login e cadastro de usuários
+- ✅ Controle de acesso baseado em papéis (Admin/Usuário)
+- ✅ Permissões por unidade hospitalar
+- ✅ Senhas criptografadas com hash
+- ✅ Sessões seguras
 
-A aplicação é dividida em frontend estático (HTML, CSS, JavaScript) e backend em Node.js com Express.js, utilizando MySQL como banco de dados. Suporta autenticação segura com hashing de senhas (via bcrypt ou bcryptjs) e validações robustas para evitar erros comuns, como formatação de datas e valores nulos.
+### Gestão de Unidades
+- ✅ Cadastro de unidades hospitalares
+- ✅ Isolamento de dados por tenant
+- ✅ Configuração dinâmica de bancos de dados
 
-**Principais Benefícios:**
-- Interface intuitiva e moderna, otimizada para desktop e mobile.
-- Controle de estoque em tempo real com alertas para itens abaixo do mínimo.
-- Relatórios de movimentações para auditoria.
-- Fácil instalação e configuração, ideal para iniciantes.
+### Gestão de Produtos
+- ✅ Cadastro de produtos com categorias
+- ✅ Controle de estoque mínimo
+- ✅ Códigos de barras
+- ✅ Unidades de medida
 
-## Funcionalidades
+### Controle de Movimentações
+- ✅ Registro de entradas e saídas
+- ✅ Rastreamento de origem/destino
+- ✅ Notas fiscais e ordens de serviço
+- ✅ Histórico completo
 
-- **Autenticação de Usuários:** Registro, login e gerenciamento de perfis (admin/user) com hashing de senhas.
-- **Gerenciamento de Produtos:** Adicionar/atualizar produtos com campos como nome, quantidade, categoria, fornecedor, validade, preços (custo/venda), código de barras, unidade de medida, marca e localização.
-- **Movimentações de Estoque:** Registro de entradas (adicionar estoque) e saídas (retiradas), com histórico em relatórios.
-- **Relatórios e Análises:** Visualização de estoque atual, itens críticos (abaixo do mínimo), margem de lucro e exportação para CSV.
-- **Busca e Paginação:** Filtro por nome/categoria e paginação para grandes listas de produtos.
-- **Ações Rápidas:** Botões para edição inline, exclusão e reposição automática de itens baixos.
-- **Validações:** Tratamento de erros para datas (formato BR: dd/mm/yyyy), números e campos obrigatórios; compatível com MySQL antigo (sem "IF NOT EXISTS" em ALTER TABLE).
+### Relatórios e Dashboard
+- ✅ Dashboard com estatísticas
+- ✅ Produtos mais movimentados
+- ✅ Alertas de estoque baixo
+- ✅ Interface responsiva com Bootstrap
 
-## Tecnologias Utilizadas
+## 🛠️ Tecnologias Utilizadas
 
-- **Backend:** Node.js, Express.js, MySQL2 (com pool de conexões), bcrypt/bcryptjs (hashing), dotenv (variáveis de ambiente).
-- **Frontend:** HTML5, CSS3 (com Flexbox/Grid), Vanilla JavaScript (sem frameworks para leveza).
-- **Banco de Dados:** MySQL/MariaDB – Tabelas: `users`, `estoque`, `relatorio`.
-- **Outros:** CORS para integração frontend-backend, body-parser para JSON.
+### Backend
+- **Flask** - Framework web Python
+- **Flask-SQLAlchemy** - ORM para banco de dados
+- **Werkzeug** - Criptografia de senhas
 
-## Estrutura do Projeto
+### Frontend
+- **HTML5**
+- **CSS3**
+- **Bootstrap 5** - Framework CSS responsivo
+- **Jinja2** - Templates
+
+### Banco de Dados
+- **SQLite** - Banco central e por tenant
+- **PostgreSQL** - Suporte opcional para produção
+
+### Infraestrutura
+- **Arquitetura Multi-Tenant** - Isolamento por unidade
+- **Database Manager** - Gerenciamento dinâmico de conexões
+- **Tenant DB** - Abstração de acesso aos bancos
+
+## 📁 Estrutura do Projeto
 
 ```
-estoque_db/
-├── README.md                  # Este arquivo
-├── .gitignore                 # Ignora node_modules, .env, etc.
-├── index.html                 # Página principal (dashboard após login)
-├── login.html                 # Página de login
-├── register.html              # Página de registro
-├── style.css                  # Estilos principais
-├── login.css                  # Estilos da página de login
-├── script.js                  # Lógica frontend (SPA navigation, API calls)
-├── auth.js                    # Funções de autenticação (localStorage)
-├── backend/
-│   ├── server.js              # Servidor Express com rotas API
-│   ├── package.json           # Dependências Node.js
-│   ├── package-lock.json      # Lockfile para dependências
-│   └── .env.example           # Exemplo de configuração (copie para .env)
+sistema-estoque-hospitalar/
+│
+├── app.py                    # Aplicação principal Flask
+├── database_config.py        # Configuração de unidades e bancos
+├── database_manager.py       # Gerenciamento de conexões DB
+├── tenant_db.py             # Abstração de acesso aos tenants
+├── requirements.txt          # Dependências Python
+├── README.md                # Documentação
+│
+├── instance/                # Bancos de dados
+│   ├── central.db          # Banco central (usuários, unidades)
+│   ├── hospital_*.db       # Bancos por unidade
+│
+├── scripts/                 # Scripts utilitários
+│   ├── init_all_dbs.py     # Inicialização de bancos
+│   ├── make_admin.py       # Criação de usuário admin
+│   ├── inspect_central.py  # Inspeção do banco central
+│   ├── normalize_unidades_access.py # Normalização de permissões
+│
+├── templates/               # Templates HTML
+│   ├── base.html           # Template base
+│   ├── login.html          # Página de login
+│   ├── cadastro.html       # Página de cadastro
+│   ├── index.html          # Dashboard
+│   ├── tabela.html         # Gestão de usuários
+│   ├── editar.html         # Editar usuário
+│   ├── produtos.html       # Gestão de produtos
+│   ├── movimentacoes.html  # Controle de movimentações
+│   ├── selecionar_unidade.html # Seleção de unidade
+│   └── ...
+│
+├── static/                  # Arquivos estáticos
+│   ├── css/
+│   ├── js/
+│   ├── img/
+│   └── scss/
+│
+└── app/                     # Estrutura modular (opcional)
+    ├── models/
+    ├── routes/
+    ├── forms/
+    └── utils/
 ```
 
-## Pré-requisitos
+## 📦 Instalação
 
-- Node.js (v16 ou superior) – [Download](https://nodejs.org/)
-- MySQL Server (v5.7+ ou MariaDB) – [Download](https://dev.mysql.com/downloads/)
-- Editor de código (VS Code recomendado)
-- Git (opcional, para clonagem)
-
-## Instalação e Configuração
-
-### 1. Clonar o Repositório
+### 1. Clonar o repositório
 ```bash
-git clone https://github.com/seu-usuario/estoque-mercearia.git  # Ou baixe o ZIP
-cd estoque-mercearia
+git clone <repositorio>
+cd projeto_login
 ```
 
-### 2. Configurar o Banco de Dados
-- Inicie o MySQL e crie o banco (o servidor cria automaticamente se não existir):
-  ```sql
-  CREATE DATABASE IF NOT EXISTS estoque_db;
-  ```
-- Credenciais padrão: user `root`, password `root` (altere em produção).
-
-### 3. Configurar Variáveis de Ambiente
-Crie `backend/.env` baseado em `backend/.env.example`:
-```
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=root
-DB_NAME=estoque_db
-PORT=3000
-ADMIN_USER=admin
-ADMIN_PASS=1234
-ADMIN_ROLE=admin
-```
-- **Segurança:** Nunca commite o `.env`. Use senhas fortes.
-
-### 4. Instalar Dependências (Backend)
-No diretório `backend/`:
+### 2. Criar ambiente virtual (recomendado)
 ```bash
-npm install
-```
-- Se bcrypt falhar (Windows), instale `bcryptjs` como fallback: `npm install bcryptjs`.
+python -m venv venv
 
-### 5. Executar o Servidor
-No diretório `backend/`:
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3. Instalar dependências
 ```bash
-node server.js
+pip install -r requirements.txt
 ```
-- O servidor inicia em `http://localhost:3000`.
-- Acesse `http://localhost:3000/login.html` para login (padrão: admin/1234).
 
-## Uso
-
-1. **Login/Registro:** Acesse `/login.html` ou `/register.html`. Após login, o dashboard carrega automaticamente.
-2. **Dashboard (Produtos):** Visualize a tabela de estoque. Use busca, paginação e ações (Editar, Movimentar, Deletar).
-3. **Adicionar Produto:** Clique em "+ Novo Produto" – preencha o formulário (validade em dd/mm/yyyy).
-4. **Movimentações:** Vá para "Movimentações" para entradas/saídas. Use ações rápidas na sidebar.
-5. **Usuários (Admin):** Gerencie contas em "Usuários".
-6. **Exportar:** Baixe CSV em "Exportar Dados".
-
-### Como usar os novos controles de Relatórios
-
-As seções de Relatórios (acessíveis pelo menu lateral > Relatórios) receberam controles interativos para facilitar a análise:
-
-- **Vendas**: carrega gráficos (mais vendidos/menos vendidos), estatísticas e a tabela de histórico de vendas. Use esta seção para visualizar desempenho comercial.
-
-- **Estoque**: contém agora uma barra de busca (por nome ou categoria), um seletor de categoria (preenchido automaticamente) e paginação. Como usar:
-  - Clique em "Estoque" dentro da área "Relatórios".
-  - Use o campo de busca para filtrar por nome do produto ou categoria.
-  - Selecione uma categoria no menu para ver só produtos daquela categoria.
-  - Use os botões "Anterior" / "Próxima" para navegar entre páginas (10 itens por página).
-
-- **Validade**: lista itens com data de validade registrada, ordenados pelos que vencem primeiro. Mostra também os dias restantes até a validade.
-
-- **Financeiro**: inclui filtros de data (De / Até) e paginação para a tabela de vendas.
-  - Defina um intervalo de datas e clique em "Aplicar" para filtrar as vendas.
-  - Os cartões mostram Total de Vendas, Faturamento e Ticket Médio atualizados conforme o filtro.
-  - A tabela tem paginação (10 itens por página) com controles "Anterior" / "Próxima".
-
-Observações:
-- Os relatórios são carregados a partir das APIs do backend (`/api/estoque`, `/api/vendas`, etc.). Se algum relatório não aparecer, verifique se o servidor está rodando em `http://localhost:3000` e confira o console do navegador para mensagens de erro (CORS, JSON inválido ou erro 500).
-- A opção **Exportar Dados** reutiliza a função de exportação que gera um arquivo CSV com os itens do estoque atualmente carregados no frontend.
-
-
-**Exemplo de Fluxo:**
-- Login: admin / 1234
-- Adicione "Arroz" (quantidade: 50, categoria: Alimentos, validade: 31/12/2025, preco_custo: 5.00, preco_venda: 10.00).
-- Retire 10 unidades: Vá para Movimentações, selecione produto, tipo "Saída", quantidade 10, motivo "Venda".
-- Verifique relatórios e margens (+100%).
-
-## Documentação da API
-
-Todos os endpoints estão em `/api/*`. Use ferramentas como Postman ou curl.
-
-### Autenticação
-- **POST /api/register**  
-  Body: `{ "username": "user", "password": "pass", "role": "user" }`  
-  Response: `{ "message": "Usuário registrado com sucesso" }` ou erro (409 se duplicado).
-
-- **POST /api/login**  
-  Body: `{ "username": "admin", "password": "1234" }`  
-  Response: `{ "username": "admin", "role": "admin" }` ou 401 (inválido).
-
-### Estoque
-- **GET /api/estoque**  
-  Response: Array de produtos (ex: `{ "id": 1, "nome": "Arroz", "quantidade": 50, "preco_venda": 10.00, ... }`).
-
-- **POST /api/estoque**  
-  Body: `{ "nome": "Produto", "quantidade": 10, "validade": "31/12/2025", "preco_venda": 15.50, ... }`  
-  Adiciona ou atualiza (incrementa quantidade se existir).
-
-- **PUT /api/estoque/:nome**  
-  Body: `{ "quantidade": 20, "categoria": "Alimentos" }`  
-  Atualiza campos específicos.
-
-- **DELETE /api/estoque/:nome**  
-  Remove o produto.
-
-### Movimentações
-- **POST /api/retirada**  
-  Body: `{ "nome": "Arroz", "quantidade": 5, "responsavel": "João", "motivo": "Venda" }`  
-  Decrementa estoque e loga no relatório.
-
-- **GET /api/relatorio**  
-  Response: Array de saídas (ex: `{ "nome": "Arroz", "quantidade": 5, "data": "2024-01-01 10:00:00" }`).
-
-- **DELETE /api/relatorio**  
-  Limpa todo o histórico.
-
-### Usuários (Admin)
-- **GET /api/users** – Lista usuários.
-- **PUT /api/users/:username** – Edita (nome, senha, role).
-- **DELETE /api/users/:username** – Remove (protege último admin).
-
-**Exemplo com curl:**
+### 4. Executar a aplicação
 ```bash
-curl -X POST http://localhost:3000/api/estoque \
-  -H "Content-Type: application/json" \
-  -d '{"nome":"Leite","quantidade":20,"preco_venda":4.50,"validade":"15/03/2025"}'
+python app.py
 ```
 
-## Capturas de Tela
+A aplicação estará disponível em `http://127.0.0.1:5000`
 
-- **Dashboard de Produtos:** Tabela com colunas (Código, Nome, Categoria, Preço, Quantidade, Validade, Ações). Alertas vermelhos para estoque baixo.
-- **Formulário de Novo Produto:** Modal com campos categorizados (obrigatórios: nome, quantidade; opcionais: preços, validade).
-- **Movimentações:** Formulário para entrada/saída com resumo do produto selecionado.
-- **Login:** Página simples com campos de usuário/senha e link para registro.
+## 🌐 Configuração para Produção
 
-(Adicione imagens reais aqui: ex. ![Dashboard](./screenshots/dashboard.png))
+### Banco de Dados PostgreSQL
 
-## Contribuições
+Para usar PostgreSQL em produção, configure as conexões no `database_config.py`:
 
-1. Fork o repositório.
-2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`.
-3. Commit: `git commit -m 'Adiciona nova funcionalidade'`.
-4. Push: `git push origin feature/nova-funcionalidade`.
-5. Abra um Pull Request.
+```python
+DATABASES = {
+    'hospital_sao_paulo': {
+        'name': 'Hospital São Paulo',
+        'database': 'postgresql://user:pass@host:port/db_sao_paulo',
+        'host': 'your-postgres-host',
+        'type': 'postgresql',
+        'description': 'Hospital São Paulo - Unidade Central'
+    }
+}
+```
 
-**Diretrizes:** Mantenha código limpo, adicione testes unitários (se aplicável) e atualize este README.
+Instale o driver PostgreSQL:
+```bash
+pip install psycopg2-binary
+```
 
-## Licença
+### Implantação no Render.com
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+1. Crie uma conta no [Render.com](https://render.com)
+2. Crie um novo Web Service
+3. Conecte seu repositório Git
+4. Configure as variáveis de ambiente:
+   - `PYTHON_VERSION`: 3.9
+   - `SECRET_KEY`: sua_chave_secreta_aqui
+   - `DATABASE_URL`: url_do_banco_postgresql (opcional)
+5. Configure o Build Command:
+   ```bash
+   pip install -r requirements.txt
+   python scripts/init_all_dbs.py
+   ```
+6. Configure o Start Command: `python app.py`
 
-## Contato
+### Implantação no Heroku
 
-- **Autor:** [Seu Nome ou GitHub](https://github.com/seu-usuario)
-- **Issues:** [Abra uma issue](https://github.com/seu-usuario/estoque-mercearia/issues) para bugs ou sugestões.
-- **Suporte:** Para dúvidas de instalação, compartilhe logs do console/terminal.
+1. Crie uma app no Heroku
+2. Configure o buildpack Python
+3. Defina variáveis de ambiente no dashboard
+4. Faça deploy via Git ou GitHub integration
 
-Obrigado por usar o Sistema de Mercearia! 🚀 Se precisar de customizações, avise.
+### Implantação com Docker
+
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+RUN python scripts/init_all_dbs.py
+
+EXPOSE 5000
+CMD ["python", "app.py"]
+```
+
+```bash
+docker build -t estoque-hospitalar .
+docker run -p 5000:5000 estoque-hospitalar
+```
+
+## 🔐 Segurança
+
+- Senhas armazenadas com hash usando Werkzeug
+- Sessões seguras com Flask-Session
+- Proteção contra CSRF
+- Validação de entrada de dados
+
+## 🎨 Personalização
+
+### Alterar cores e estilos
+Edite o arquivo `static/style.css` para personalizar o visual da aplicação.
+
+### Modificar templates
+Os templates HTML estão na pasta `templates/` e usam a sintaxe Jinja2.
+
+## 📝 Uso
+
+1. **Cadastro**: Acesse `/cadastro` para criar uma nova conta
+2. **Login**: Use email e senha para acessar o sistema
+3. **Dashboard**: Página inicial após login
+4. **Gerenciar Usuários**: Visualize, edite e exclua usuários em `/tabela`
+
+## 🛠️ Scripts Utilitários
+
+### Gerenciamento de Usuários
+```bash
+# Criar usuário administrador
+python scripts/make_admin.py [email] [senha]
+
+# Listar todos os administradores
+python scripts/list_admins.py
+
+# Normalizar permissões de unidades (correção de dados)
+python scripts/normalize_unidades_access.py
+```
+
+### Gerenciamento de Banco de Dados
+```bash
+# Inicializar todos os bancos de dados
+python scripts/init_all_dbs.py
+
+# Inspecionar banco central
+python scripts/inspect_central.py [email_opcional]
+
+# Conceder acesso a unidades para usuários
+python scripts/grant_units.py
+```
+
+## 🔧 Solução de Problemas
+
+### Erro JSONDecodeError
+Se encontrar erro ao acessar unidades:
+```bash
+python scripts/normalize_unidades_access.py
+```
+
+### Problemas de Conexão DB
+1. Verifique se os arquivos `.db` existem em `instance/`
+2. Execute `python scripts/init_all_dbs.py`
+3. Verifique permissões de escrita na pasta
+
+### Usuário sem acesso
+1. Admin deve editar usuário em `/editar/<id>`
+2. Selecionar unidades permitidas
+3. Salvar alterações
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+### Diretrizes de Código
+- Use SQLAlchemy para queries complexas
+- Mantenha isolamento por tenant
+- Documente funções e classes
+- Siga PEP 8 para Python
+- Use commits descritivos
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para detalhes.
+
+## 🆘 Suporte
+
+### Documentação Técnica
+- **Arquitetura**: Sistema multi-tenant com isolamento por unidade
+- **Banco Central**: Armazena usuários, unidades e configurações
+- **Bancos Tenant**: Um por unidade hospitalar
+- **Sessões**: Controle de acesso baseado em permissões
+
+### Problemas Comuns
+1. **Erro de Python não encontrado**: Reinstale Python e adicione ao PATH
+2. **Erro de dependências**: `pip install -r requirements.txt`
+3. **Erro de banco**: Execute scripts de inicialização
+4. **Erro de permissões**: Verifique configuração de unidades
+
+### Logs e Debug
+- Logs do Flask aparecem no console
+- Use `app.logger` para logging personalizado
+- Debug mode: `python app.py` (desenvolvimento)
+
+---
+
+Email: admin@hospital.com
+Senha: Admin@1234
+
+
+
+caso eu queira edita ou criar outro Admin 
+python scripts/make_admin.py admin@hospital.com Admin@1234

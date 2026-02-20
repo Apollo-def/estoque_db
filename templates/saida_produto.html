@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Saída - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">📤 Registrar Saída de Produtos</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="produto_id" class="form-label">Produto *</label>
+                                <select class="form-select" id="produto_id" name="produto_id" required onchange="mostrarInfoProduto()">
+                                    <option value="">Selecione um produto...</option>
+                                    {% for produto in produtos %}
+                                    <option value="{{ produto.id }}" 
+                                            data-quantidade="{{ produto.quantidade }}"
+                                            {% if produto.quantidade == 0 %}disabled{% endif %}>
+                                        {{ produto.nome }} (Estoque: {{ produto.quantidade }})
+                                        {% if produto.quantidade == 0 %} - SEM ESTOQUE{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantidade" class="form-label">Quantidade *</label>
+                                <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required>
+                                <div class="form-text">Quantidade máxima disponível: <span id="max_disponivel">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="destino" class="form-label">Destino *</label>
+                                <input type="text" class="form-control" id="destino" name="destino" 
+                                       placeholder="Ex: Cliente XYZ, Departamento Y" required>
+                                <div class="form-text">Para onde vão os produtos?</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ordem_servico" class="form-label">Ordem de Serviço</label>
+                                <input type="text" class="form-control" id="ordem_servico" name="ordem_servico" 
+                                       placeholder="Ex: OS-005678">
+                                <div class="form-text">Número da OS (opcional)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo da Saída</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" 
+                                  placeholder="Descreva o motivo desta saída..."></textarea>
+                    </div>
+                    
+                    <!-- Alertas de Estoque -->
+                    <div id="alerta_estoque" class="alert" style="display: none;"></div>
+                    
+                    <!-- Informações do Produto Selecionado -->
+                    <div id="info_produto" class="alert alert-info" style="display: none;">
+                        <h6>📦 Informações do Produto:</h6>
+                        <div id="detalhes_produto"></div>
+                    </div>
+                    
+                    <!-- Preview da Movimentação -->
+                    <div id="preview_movimentacao" class="alert alert-warning" style="display: none;">
+                        <h6>📤 Preview da Saída:</h6>
+                        <div id="detalhes_preview"></div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('movimentacoes') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-warning" id="btn_submit">📤 Registrar Saída</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarInfoProduto() {
+    const select = document.getElementById('produto_id');
+    const infoDiv = document.getElementById('info_produto');
+    const detalhesDiv = document.getElementById('detalhes_produto');
+    const quantidadeInput = document.getElementById('quantidade');
+    const maxDisponivelSpan = document.getElementById('max_disponivel');
+    const alertaDiv = document.getElementById('alerta_estoque');
+    const btnSubmit = document.getElementById('btn_submit');
+    
+    if (select.value) {
+        const option = select.options[select.selectedIndex];
+        const quantidade = parseInt(option.dataset.quantidade);
+        
+        maxDisponivelSpan.textContent = quantidade + ' unidades';
+        quantidadeInput.max = quantidade;
+        
+        detalhesDiv.innerHTML = `
+            <strong>Estoque atual:</strong> ${quantidade} unidades<br>
+            <strong>Novo estoque:</strong> <span id="novo_estoque">${quantidade}</span> unidades
+        `;
+        
+        // Configurar alertas baseado no estoque
+        if (quantidade === 0) {
+            alertaDiv.className = 'alert alert-danger';
+            alertaDiv.innerHTML = '<strong>❌ Produto sem estoque!</strong> Não é possível registrar saída.';
+            alertaDiv.style.display = 'block';
+            btnSubmit.disabled = true;
+        } else if (quantidade <= 5) {
+            alertaDiv.className = 'alert alert-warning';
+            alertaDiv.innerHTML = '<strong>⚠️ Estoque baixo!</strong> Apenas ' + quantidade + ' unidades disponíveis.';
+            alertaDiv.style.display = 'block';
+            btnSubmit.disabled = false;
+        } else {
+            alertaDiv.style.display = 'none';
+            btnSubmit.disabled = false;
+        }
+        
+        infoDiv.style.display = 'block';
+        atualizarPreview();
+    } else {
+        infoDiv.style.display = 'none';
+        alertaDiv.style.display = 'none';
+        document.getElementById('preview_movimentacao').style.display = 'none';
+        btnSubmit.disabled = false;
+    }
+}
+
+function atualizarPreview() {
+    const select = document.getElementById('produto_id');
+    const quantidade = document.getElementById('quantidade').value;
+    const destino = document.getElementById('destino').value;
+    const previewDiv = document.getElementById('preview_movimentacao');
+    const detalhesPreview = document.getElementById('detalhes_preview');
+    const novoEstoqueSpan = document.getElementById('novo_estoque');
+    const alertaDiv = document.getElementById('alerta_estoque');
+    
+    if (select.value && quantidade && destino) {
+        const option = select.options[select.selectedIndex];
+        const estoqueAtual = parseInt(option.dataset.quantidade);
+        const nomeProduto = option.text.split(' (')[0];
+        const quantidadeSaida = parseInt(quantidade);
+        const novoEstoque = estoqueAtual - quantidadeSaida;
+        
+        if (novoEstoqueSpan) {
+            novoEstoqueSpan.textContent = novoEstoque;
+        }
+        
+        // Verificar se a quantidade é válida
+        if (quantidadeSaida > estoqueAtual) {
+            alertaDiv.className = 'alert alert-danger';
+            alertaDiv.innerHTML = `<strong>❌ Quantidade indisponível!</strong> Estoque atual: ${estoqueAtual} unidades.`;
+            alertaDiv.style.display = 'block';
+            previewDiv.style.display = 'none';
+            return;
+        }
+        
+        let statusEstoque = '';
+        if (novoEstoque === 0) {
+            statusEstoque = '<span class="badge bg-danger">SEM ESTOQUE</span>';
+        } else if (novoEstoque <= 5) {
+            statusEstoque = '<span class="badge bg-warning">ESTOQUE BAIXO</span>';
+        } else {
+            statusEstoque = '<span class="badge bg-success">OK</span>';
+        }
+        
+        detalhesPreview.innerHTML = `
+            <strong>Produto:</strong> ${nomeProduto}<br>
+            <strong>Saída:</strong> -${quantidadeSaida} unidades<br>
+            <strong>Destino:</strong> ${destino}<br>
+            <strong>Estoque resultante:</strong> ${novoEstoque} unidades ${statusEstoque}
+        `;
+        
+        previewDiv.style.display = 'block';
+    } else {
+        previewDiv.style.display = 'none';
+    }
+}
+
+// Adicionar listeners para atualizar preview
+document.getElementById('quantidade').addEventListener('input', atualizarPreview);
+document.getElementById('destino').addEventListener('input', atualizarPreview);
+
+// Validar quantidade ao digitar
+document.getElementById('quantidade').addEventListener('input', function() {
+    const max = parseInt(this.max);
+    const valor = parseInt(this.value);
+    
+    if (valor > max) {
+        this.value = max;
+    }
+});
+
+// Sugestões rápidas para destino
+document.getElementById('destino').addEventListener('focus', function() {
+    if (!this.value) {
+        this.placeholder = 'Ex: Venda, Uso interno, Doação, Transferência';
+    }
+});
+</script>
+{% endblock %}

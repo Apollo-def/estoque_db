@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --primary-light: #F5F3FF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --bg-color: #F9FAFB;
+            --white: #FFFFFF;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .login-box {
+            background-color: var(--white);
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-header h1 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .login-header p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+        
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .input-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-field i {
+            position: absolute;
+            left: 1rem;
+            color: #9CA3AF;
+            font-size: 1rem;
+        }
+        
+        .input-field input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            padding-left: 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .forgot-password:hover {
+            color: var(--primary-hover);
+        }
+        
+        .form-options {
+            display: flex;
+            align-items: center;
+            margin: 1.25rem 0;
+        }
+        
+        .form-options label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-options input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .login-button:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .signup-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>Login</h1>
+                <p>Bem-vindo de volta! Por favor, faça login para continuar.</p>
+            </div>
+            <form method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <div class="input-field">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="Digite seu e-mail" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-header">
+                        <label for="senha">Senha</label>
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
+                        <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar senha">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Lembrar de mim</span>
+                    </label>
+                </div>
+                <button type="submit" class="login-button">
+                    Entrar
+                </button>
+            </form>
+
+        </div>
+    </div>
+    
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Redefinir Senha</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Digite seu endereço de e-mail e enviaremos um link para redefinir sua senha.</p>
+                <div class="form-group">
+                    <input type="email" id="resetEmail" placeholder="Seu e-mail" class="input-field">
+                </div>
+                <button type="button" id="sendResetLink" class="login-button">Enviar Link</button>
+                <div id="resetMessage" class="message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+        
+        .close-modal {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+        
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            display: none;
+        }
+        
+        .message.success {
+            background-color: #D1FAE5;
+            color: #065F46;
+            display: block;
+        }
+        
+        .message.error {
+            background-color: #FEE2E2;
+            color: #B91C1C;
+            display: block;
+        }
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle password visibility
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('senha');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const form = document.querySelector('.login-form');
+            const loginButton = document.querySelector('.login-button');
+
+            // Toggle password visibility
+            if (togglePassword && passwordInput && eyeIcon) {
+                togglePassword.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    // Toggle icon
+                    eyeIcon.classList.toggle('fa-eye');
+                    eyeIcon.classList.toggle('fa-eye-slash');
+                    
+                    // Update aria-label for accessibility
+                    const isPasswordVisible = type === 'text';
+                    this.setAttribute('aria-label', isPasswordVisible ? 'Ocultar senha' : 'Mostrar senha');
+                    
+                    // Focus back on password field
+                    passwordInput.focus();
+                });
+
+                // Add keyboard navigation support
+                togglePassword.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            }
+
+            // Form submission handling
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (form.checkValidity()) {
+                        // Show loading state
+                        const originalButtonText = loginButton.innerHTML;
+                        loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
+                        loginButton.disabled = true;
+                        
+                        // Add loading class to form
+                        form.classList.add('is-submitting');
+                        
+                        // Prevent double submission
+                        const isSubmitting = form.getAttribute('data-submitting') === 'true';
+                        if (isSubmitting) {
+                            e.preventDefault();
+                            return false;
+                        }
+                        
+                        form.setAttribute('data-submitting', 'true');
+                        
+                        // Simulate form submission (remove in production)
+                        setTimeout(() => {
+                            loginButton.innerHTML = originalButtonText;
+                            loginButton.disabled = false;
+                            form.classList.remove('is-submitting');
+                            form.setAttribute('data-submitting', 'false');
+                        }, 2000);
+                    }
+                });
+                
+                // Add input validation and styling
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(input => {
+                    // Add focus and blur effects
+                    input.addEventListener('focus', function() {
+                        this.parentElement.classList.add('focused');
+                    });
+                    
+                    input.addEventListener('blur', function() {
+                        this.parentElement.classList.remove('focused');
+                        
+                        // Add/remove error class based on validation
+                        if (this.checkValidity()) {
+                            this.parentElement.classList.remove('error');
+                        } else {
+                            this.parentElement.classList.add('error');
+                        }
+                    });
+                    
+                    // Real-time validation
+                    input.addEventListener('input', function() {
+                        if (this.checkValidity()) {
+                            this.parentElement.classList.remove('error');
+                        }
+                    });
+                });
+            }
+            
+            // Add animation to login button on hover
+            if (loginButton) {
+                loginButton.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.2)';
+                });
+                
+                loginButton.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+                
+                loginButton.addEventListener('mousedown', function() {
+                    this.style.transform = 'translateY(1px)';
+                });
+                
+                loginButton.addEventListener('mouseup', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+            }
+            
+            // Forgot Password Modal
+            const modal = document.getElementById('forgotPasswordModal');
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            const closeBtn = document.querySelector('.close-modal');
+            const sendResetBtn = document.getElementById('sendResetLink');
+            const resetMessage = document.getElementById('resetMessage');
+            const resetEmail = document.getElementById('resetEmail');
+            
+            // Open modal when clicking Forgot Password
+            if (forgotLink) {
+                forgotLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    modal.style.display = 'flex';
+                    resetEmail.focus();
+                });
+            }
+            
+            // Close modal when clicking X
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    resetMessage.style.display = 'none';
+                    resetEmail.value = '';
+                });
+            }
+            
+            // Close modal when clicking outside content
+            window.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    resetMessage.style.display = 'none';
+                    resetEmail.value = '';
+                }
+            });
+            
+            // Handle reset password form submission
+            if (sendResetBtn) {
+                sendResetBtn.addEventListener('click', function() {
+                    const email = resetEmail.value.trim();
+                    
+                    // Basic email validation
+                    if (!email) {
+                        showMessage('Por favor, insira seu endereço de e-mail.', 'error');
+                        return;
+                    }
+                    
+                    if (!isValidEmail(email)) {
+                        showMessage('Por favor, insira um endereço de e-mail válido.', 'error');
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const originalText = sendResetBtn.textContent;
+                    sendResetBtn.disabled = true;
+                    sendResetBtn.textContent = 'Enviando...';
+                    
+                    // Simulate API call (replace with actual API call)
+                    setTimeout(() => {
+                        // In a real app, you would make an API call to your backend here
+                        // For example: fetch('/api/reset-password', { method: 'POST', body: JSON.stringify({ email }) })
+                        
+                        // Show success message
+                        showMessage('Um link para redefinição de senha foi enviado para o seu e-mail.', 'success');
+                        sendResetBtn.textContent = originalText;
+                        sendResetBtn.disabled = false;
+                        
+                        // Clear form and close modal after 3 seconds
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                            resetMessage.style.display = 'none';
+                            resetEmail.value = '';
+                        }, 3000);
+                    }, 1500);
+                });
+            }
+            
+            // Helper function to show messages
+            function showMessage(message, type) {
+                resetMessage.textContent = message;
+                resetMessage.className = 'message ' + type;
+                resetMessage.style.display = 'block';
+            }
+            
+            // Email validation helper
+            function isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+            
+            // Auto-focus email field on page load
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                setTimeout(() => {
+                    emailInput.focus();
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
+  
+</script>
+

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Unidade - Sistema Hospitalar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Criar Nova Unidade</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('novo_unidade') }}">
+                    <div class="mb-3">
+                        <label class="form-label">ID da Unidade (ex: hospital_sao_paulo)</label>
+                        <input class="form-control" name="unit_id" required placeholder="hospital_sao_paulo">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input class="form-control" name="nome" required placeholder="Hospital São Paulo">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Arquivo do Banco (sqlite)</label>
+                        <input class="form-control" name="arquivo_db" required placeholder="hospital_sao_paulo.db">
+                        <div class="form-text">Para SQLite informe o nome do arquivo dentro da pasta <code>instance/</code>.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição (opcional)</label>
+                        <textarea class="form-control" name="descricao" rows="3"></textarea>
+                    </div>
+                    <div class="text-end">
+                        <a href="{{ url_for('tabela') }}" class="btn btn-secondary">Voltar</a>
+                        <button type="submit" class="btn btn-primary">Criar Unidade</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

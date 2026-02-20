@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Movimentações - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>📋 Histórico de Movimentações</h2>
+            {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('entrada_produto') }}" class="btn btn-success">📥 Registrar Entrada</a>
+                <a href="{{ url_for('saida_produto') }}" class="btn btn-warning">📤 Registrar Saída</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <select class="form-select" name="tipo">
+                            <option value="">Todas movimentações</option>
+                            <option value="entrada" {% if request.args.get('tipo') == 'entrada' %}selected{% endif %}>📥 Entradas</option>
+                            <option value="saida" {% if request.args.get('tipo') == 'saida' %}selected{% endif %}>📤 Saídas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="produto_id">
+                            <option value="">Todos produtos</option>
+                            {% for produto in produtos %}
+                            <option value="{{ produto.id }}" {% if request.args.get('produto_id') == produto.id|string %}selected{% endif %}>{{ produto.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if movimentacoes %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Tipo</th>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Responsável</th>
+                        <th>Origem/Destino</th>
+                        <th>Documento</th>
+                        {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+                        <th>Ações</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimentacoes %}
+                    <tr>
+                        <td>
+                            {% if mov.data_movimentacao %}
+                                {% if mov.data_movimentacao is string %}
+                                    {% set data = mov.data_movimentacao.split(' ')[0] %}
+                                    {% set hora = mov.data_movimentacao.split(' ')[1] if ' ' in mov.data_movimentacao else '00:00' %}
+                                    {{ data }} {{ hora }}
+                                {% else %}
+                                    {{ mov.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}
+                                {% endif %}
+                            {% else %}
+                                Data não disponível
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.tipo == 'entrada' %}
+                            <span class="badge bg-success">📥 ENTRADA</span>
+                            {% else %}
+                            <span class="badge bg-warning">📤 SAÍDA</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ mov.produto_nome or 'Produto não encontrado' }}</strong>
+                            {% if mov.categoria %}
+                            <br><small class="text-muted">{{ mov.categoria }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if mov.tipo == 'entrada' %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if mov.tipo == 'entrada' %}+{% else %}-{% endif %}{{ mov.quantidade }}
+                            </span>
+                        </td>
+                        <td>{{ mov.usuario_responsavel.nome if mov.usuario_responsavel else 'Não informado' }}</td>
+                        <td>
+                            {% if mov.origem %}
+                            <span class="text-success">📥 {{ mov.origem }}</span>
+                            {% elif mov.destino %}
+                            <span class="text-warning">📤 {{ mov.destino }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mov.nota_fiscal %}
+                            <small>NF: {{ mov.nota_fiscal }}</small>
+                            {% elif mov.ordem_servico %}
+                            <small>OS: {{ mov.ordem_servico }}</small>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+                        <td>
+                            <a href="{{ url_for('excluir_movimentacao', id=mov.id) }}" 
+                               class="btn btn-sm btn-danger" 
+                               onclick="return confirm('Tem certeza que deseja excluir esta movimentação?\n\nIsso irá reverter o estoque!')">
+                                🗑️
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% if mov.motivo %}
+                    <tr>
+                        <td colspan="{% if session.user_tipo == 'admin' %}8{% else %}7{% endif %}">
+                            <small class="text-muted">
+                                <strong>Motivo:</strong> {{ mov.motivo }}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <h4>📋 Nenhuma movimentação encontrada</h4>
+            <p>Registre a primeira entrada ou saída de produtos.</p>
+            {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('entrada_produto') }}" class="btn btn-success">📥 Primeira Entrada</a>
+                <a href="{{ url_for('saida_produto') }}" class="btn btn-warning">📤 Primeira Saída</a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Resumo Estatístico -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="card-title">📊 Total Movimentações</h5>
+                <h2 class="text-primary">{{ movimentacoes|length }}</h2>
+                <p class="card-text">Registros</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="card-title">📥 Total Entradas</h5>
+                <h2 class="text-success">{{ movimentacoes|selectattr('tipo', 'equalto', 'entrada')|list|length }}</h2>
+                <p class="card-text">Registros</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="card-title">📤 Total Saídas</h5>
+                <h2 class="text-warning">{{ movimentacoes|selectattr('tipo', 'equalto', 'saida')|list|length }}</h2>
+                <p class="card-text">Registros</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <h5 class="card-title">📦 Saldo Geral</h5>
+                <h2 class="text-info">{{ saldo_geral or 0 }}</h2>
+                <p class="card-text">Itens em estoque</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Entrada - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">📥 Registrar Entrada de Produtos</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="produto_id" class="form-label">Produto *</label>
+                                <select class="form-select" id="produto_id" name="produto_id" required onchange="mostrarInfoProduto()">
+                                    <option value="">Selecione um produto...</option>
+                                    {% for produto in produtos %}
+                                    <option value="{{ produto.id }}" 
+                                            data-quantidade="{{ produto.quantidade }}">
+                                        {{ produto.nome }} (Estoque: {{ produto.quantidade }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantidade" class="form-label">Quantidade *</label>
+                                <input type="number" class="form-control" id="quantidade" name="quantidade" min="1" required>
+                                <div class="form-text">Informe a quantidade que está entrando</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="origem" class="form-label">Origem *</label>
+                                <input type="text" class="form-control" id="origem" name="origem" 
+                                       placeholder="Ex: Fornecedor ABC, Departamento X" required>
+                                <div class="form-text">De onde vêm os produtos?</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nota_fiscal" class="form-label">Nota Fiscal</label>
+                                <input type="text" class="form-control" id="nota_fiscal" name="nota_fiscal" 
+                                       placeholder="Ex: NF-001234">
+                                <div class="form-text">Número da nota fiscal (opcional)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo da Entrada</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" 
+                                  placeholder="Descreva o motivo desta entrada..."></textarea>
+                    </div>
+                    
+                    <!-- Informações do Produto Selecionado -->
+                    <div id="info_produto" class="alert alert-info" style="display: none;">
+                        <h6>📦 Informações do Produto:</h6>
+                        <div id="detalhes_produto"></div>
+                    </div>
+                    
+                    <!-- Preview da Movimentação -->
+                    <div id="preview_movimentacao" class="alert alert-success" style="display: none;">
+                        <h6>✅ Preview da Entrada:</h6>
+                        <div id="detalhes_preview"></div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('movimentacoes') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">📥 Registrar Entrada</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function mostrarInfoProduto() {
+    const select = document.getElementById('produto_id');
+    const infoDiv = document.getElementById('info_produto');
+    const detalhesDiv = document.getElementById('detalhes_produto');
+    const quantidadeInput = document.getElementById('quantidade');
+    
+    if (select.value) {
+        const option = select.options[select.selectedIndex];
+        const quantidade = option.dataset.quantidade;
+        
+        detalhesDiv.innerHTML = `
+            <strong>Estoque atual:</strong> ${quantidade} unidades<br>
+            <strong>Novo estoque:</strong> <span id="novo_estoque">${quantidade}</span> unidades
+        `;
+        
+        infoDiv.style.display = 'block';
+        atualizarPreview();
+    } else {
+        infoDiv.style.display = 'none';
+        document.getElementById('preview_movimentacao').style.display = 'none';
+    }
+}
+
+function atualizarPreview() {
+    const select = document.getElementById('produto_id');
+    const quantidade = document.getElementById('quantidade').value;
+    const origem = document.getElementById('origem').value;
+    const previewDiv = document.getElementById('preview_movimentacao');
+    const detalhesPreview = document.getElementById('detalhes_preview');
+    const novoEstoqueSpan = document.getElementById('novo_estoque');
+    
+    if (select.value && quantidade && origem) {
+        const option = select.options[select.selectedIndex];
+        const estoqueAtual = parseInt(option.dataset.quantidade);
+        const nomeProduto = option.text.split(' (')[0];
+        const novoEstoque = estoqueAtual + parseInt(quantidade);
+        
+        if (novoEstoqueSpan) {
+            novoEstoqueSpan.textContent = novoEstoque;
+        }
+        
+        detalhesPreview.innerHTML = `
+            <strong>Produto:</strong> ${nomeProduto}<br>
+            <strong>Entrada:</strong> +${quantidade} unidades<br>
+            <strong>Origem:</strong> ${origem}<br>
+            <strong>Estoque resultante:</strong> ${novoEstoque} unidades
+        `;
+        
+        previewDiv.style.display = 'block';
+    } else {
+        previewDiv.style.display = 'none';
+    }
+}
+
+// Adicionar listeners para atualizar preview
+document.getElementById('quantidade').addEventListener('input', atualizarPreview);
+document.getElementById('origem').addEventListener('input', atualizarPreview);
+
+// Sugestões rápidas para origem
+document.getElementById('origem').addEventListener('focus', function() {
+    if (!this.value) {
+        this.placeholder = 'Ex: Compra direta, Doação, Transferência, Devolução';
+    }
+});
+</script>
+{% endblock %}

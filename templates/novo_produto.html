@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Produto - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">📦 Cadastrar Novo Produto</h2>
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome do Produto *</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categoria" class="form-label">Categoria</label>
+                                <input type="text" class="form-control" id="categoria" name="categoria" placeholder="Ex: Eletrônicos, Alimentos, etc.">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3" placeholder="Descreva o produto..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantidade" class="form-label">Quantidade *</label>
+                                <input type="number" class="form-control" id="quantidade" name="quantidade" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">Categoria</label>
+                        <input type="text" class="form-control" id="categoria" name="categoria" placeholder="Ex: Eletrônicos, Alimentos, etc.">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('produtos') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">💾 Cadastrar Produto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function atualizarQuantidade() {
+    const status = document.getElementById('status').value;
+    const quantidade = document.getElementById('quantidade');
+    
+    switch(status) {
+        case 'em_estoque':
+            quantidade.value = 10;
+            break;
+        case 'estoque_baixo':
+            quantidade.value = 3;
+            break;
+        case 'sem_estoque':
+            quantidade.value = 0;
+            break;
+        default:
+            quantidade.value = '';
+    }
+}
+
+// Formatar preço
+document.getElementById('preco').addEventListener('blur', function() {
+    if (this.value && !isNaN(this.value)) {
+        this.value = parseFloat(this.value).toFixed(2);
+    }
+});
+</script>
+{% endblock %}

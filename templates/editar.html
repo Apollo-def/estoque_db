@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">
+                    <i class="fas fa-user-edit me-2"></i>Editar Usuário
+                </h2>
+                
+                {% if session.user_tipo == 'admin' %}
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Administrador:</strong> Você está editando as permissões do usuário <strong>{{ usuario.nome }}</strong>
+                </div>
+                {% endif %}
+                
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Nome
+                                </label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="{{ usuario.nome }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Email
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ usuario.email }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="nova_senha" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Nova Senha (opcional)
+                        </label>
+                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" 
+                               placeholder="Deixe em branco para manter a senha atual" minlength="6">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Mínimo 6 caracteres. Deixe em branco se não quiser alterar.
+                        </div>
+                    </div>
+                    
+                    {% if session.user_tipo == 'admin' %}
+                    <div class="card bg-light mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>Permissões de Acesso
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tipo" class="form-label">
+                                            <i class="fas fa-user-tag me-1"></i>Tipo de Usuário
+                                        </label>
+                                        <select class="form-select" id="tipo" name="tipo">
+                                            <option value="user" {% if usuario.tipo != 'admin' %}selected{% endif %}>
+                                                👤 Usuário Comum
+                                            </option>
+                                            <option value="admin" {% if usuario.tipo == 'admin' %}selected{% endif %}>
+                                                👑 Administrador
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="pode_cadastrar" class="form-label">
+                                            <i class="fas fa-key me-1"></i>Permissão de Cadastro
+                                        </label>
+                                        <select class="form-select" id="pode_cadastrar" name="pode_cadastrar">
+                                            <option value="1" {% if usuario.pode_cadastrar and usuario.pode_cadastrar|int == 1 %}selected{% endif %}>
+                                                ✅ Pode cadastrar produtos e movimentações
+                                            </option>
+                                            <option value="0" {% if not usuario.pode_cadastrar or usuario.pode_cadastrar|int == 0 %}selected{% endif %}>
+                                                👁 Apenas visualização
+                                            </option>
+                                        </select>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Define se este usuário pode cadastrar produtos e registrar movimentações
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-building me-1"></i>Unidades de Acesso
+                                </label>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="form-text mb-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Selecione as unidades que este usuário poderá acessar
+                                    </div>
+                                    <div class="row">
+                                        {% for unit_id, unit in unidades.items() %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="unidades" value="{{ unit_id }}" 
+                                                       id="unit_{{ unit_id }}"
+                                                       {% if unit_id in (usuario.get_unidades_acesso() or []) %}checked{% endif %}>
+                                                <label class="form-check-label" for="unit_{{ unit_id }}">
+                                                    <i class="fas fa-hospital me-1"></i>{{ unit.name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-list-alt me-1"></i>Permissões de Menu
+                                </label>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="form-text mb-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Selecione os menus que este usuário poderá acessar
+                                    </div>
+                                    <div class="row">
+                                        {% for menu in menus_disponiveis %}
+                                            {% if not menu.get('admin_only') or (menu.get('admin_only') and session.user_tipo == 'admin') %}
+                                            <div class="col-md-6 mb-2">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="permissoes_menu" 
+                                                           value="{{ menu.id }}" 
+                                                           id="menu_{{ menu.id }}"
+                                                           {% if menu.id in permissoes_atual or not permissoes_atual and menu.id in ['dashboard', 'produtos'] %}checked{% endif %}>
+                                                    <label class="form-check-label" for="menu_{{ menu.id }}">
+                                                        <i class="{{ menu.icone }} me-1"></i>{{ menu.nome }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-1"></i>Atualizar Usuário
+                        </button>
+                        <a href="{{ url_for('usuarios') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

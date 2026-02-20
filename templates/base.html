@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Estoque Hospitalar{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #1e1e2d;
+            --sidebar-text: #a2a3b7;
+            --sidebar-active: #3699ff;
+            --sidebar-hover: #2b2b40;
+            --header-bg: #ffffff;
+            --content-bg: #f2f3f8;
+            --card-bg: #ffffff;
+            --text-primary: #3f4254;
+            --text-secondary: #7e8299;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--content-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 265px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-logo {
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-logo i {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 5px;
+            display: none;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-category {
+            padding: 10px 25px;
+            color: #4c4e6f;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 10px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            position: relative;
+        }
+        
+        .menu-item i {
+            margin-right: 10px;
+            width: 24px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background: var(--sidebar-hover);
+            color: #fff;
+        }
+        
+        .menu-item.active {
+            border-left: 4px solid var(--sidebar-active);
+            padding-left: 21px;
+            font-weight: 500;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 265px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin 0.3s;
+        }
+        
+        /* Header */
+        .main-header {
+            background: var(--header-bg);
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            display: none;
+        }
+        
+        .search-bar {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+        
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid #e4e6ef;
+            border-radius: 6px;
+            background-color: #f5f8fa;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .search-bar input:focus {
+            background-color: #fff;
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.1);
+            outline: none;
+        }
+        
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b5b5c3;
+            font-size: 0.9rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .notification-btn, .user-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            position: relative;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f64e60;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--sidebar-active);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 10px 0;
+            min-width: 220px;
+        }
+        
+        .dropdown-item {
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .dropdown-divider {
+            margin: 5px 0;
+            border-top: 1px solid #f3f6f9;
+        }
+        
+        /* Content */
+        .content-wrapper {
+            padding: 30px;
+            flex: 1;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.03);
+            margin-bottom: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid #ebedf3;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        /* Tables */
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            border-top: none;
+            border-bottom: 1px solid #ebedf3;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #b5b5c3;
+            padding: 12px 15px;
+            white-space: nowrap;
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-color: #f3f6f9;
+        }
+        
+        /* Buttons */
+        .btn {
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 5px;
+            font-size: 0.9em;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--sidebar-active);
+            border-color: var(--sidebar-active);
+        }
+        
+        .btn-primary:hover {
+            background-color: #187de4;
+            border-color: #187de4;
+        }
+        
+        .btn-outline-primary {
+            color: var(--sidebar-active);
+            border-color: var(--sidebar-active);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--sidebar-active);
+            border-color: var(--sidebar-active);
+        }
+        
+        /* Badges */
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .badge-success {
+            background-color: #e8fff3;
+            color: #1bc5bd;
+        }
+        
+        .badge-warning {
+            background-color: #fff8dd;
+            color: #ffa800;
+        }
+        
+        .badge-danger {
+            background-color: #fff5f8;
+            color: #f64e60;
+        }
+        
+        .badge-info {
+            background-color: #e1f0ff;
+            color: #3699ff;
+        }
+        
+        /* Forms */
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .form-control, .form-select {
+            border: 1px solid #e4e6ef;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar-close {
+                display: block;
+            }
+            
+            .search-bar {
+                max-width: 250px;
+            }
+        }
+        
+        @media (max-width: 767.98px) {
+            .search-bar {
+                display: none;
+            }
+            
+            .content-wrapper {
+                padding: 20px 15px;
+            }
+            
+            .page-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+        
+        /* Submenu Styles */
+        .submenu-wrapper {
+            position: relative;
+        }
+        
+        .submenu-toggle {
+            position: relative;
+        }
+        
+        .submenu-arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .submenu-toggle.active .submenu-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .submenu.active {
+            max-height: 500px;
+        }
+        
+        .submenu-item {
+            padding-left: 59px !important;
+            font-size: 0.85rem;
+            border-left: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .submenu-item:hover {
+            background: rgba(54, 153, 255, 0.1);
+            border-left-color: var(--sidebar-active);
+            padding-left: 65px !important;
+        }
+        
+        .submenu-item.active {
+            background: rgba(54, 153, 255, 0.15);
+            border-left-color: var(--sidebar-active);
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .submenu-item i {
+            font-size: 0.9rem;
+        }
+        
+        /* Enhanced Menu Item Styles */
+        .menu-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(54, 153, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .menu-item:hover::before {
+            left: 100%;
+        }
+        
+        /* Admin Badge */
+        .admin-badge {
+            background: linear-gradient(135deg, #f64e60, #ff6b6b);
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Enhanced Sidebar */
+        .sidebar {
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-header {
+            background: linear-gradient(135deg, #1e1e2d, #2a2a3e);
+        }
+        
+        .sidebar-logo {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-logo:hover {
+            transform: translateX(5px);
+        }
+        
+        .sidebar-logo i {
+            background: linear-gradient(135deg, #3699ff, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Menu Category Enhancement */
+        .menu-category {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .menu-category::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--sidebar-active);
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Backup Modal */
+        .backup-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .backup-modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 0.3s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages position-fixed top-0 start-50 translate-middle-x w-100 p-3" style="z-index: 9999;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <i class="fas fa-hospital"></i>
+                    <span>Estoque Saúde</span>
+                    {% if session.user_tipo == 'admin' %}
+                    <span class="admin-badge">ADMIN</span>
+                    {% endif %}
+                </a>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            {% set user_permissoes = session.get('permissoes_menu', {}) %}
+            <div class="sidebar-menu">
+                <!-- Menu Geral -->
+                {% if user_permissoes.get('dashboard', true) or session.user_tipo == 'admin' %}
+                <div class="menu-category">Geral</div>
+                <a href="{{ url_for('index') }}" class="menu-item {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                {% if session.unit_id %}
+                {% if user_permissoes.get('produtos', true) or session.user_tipo == 'admin' %}
+                <a href="{{ url_for('produtos') }}" class="menu-item {% if request.endpoint == 'produtos' %}active{% endif %}">
+                    <i class="fas fa-box"></i>
+                    <span>Produtos</span>
+                </a>
+                {% endif %}
+                
+                {% if (user_permissoes.get('movimentacoes', true) or session.user_tipo == 'admin') and (session.user_tipo == 'admin' or session.get('pode_cadastrar', 1)) %}
+                <a href="{{ url_for('entrada_produto') }}" class="menu-item {% if request.endpoint == 'entrada_produto' %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Entrada</span>
+                </a>
+                
+                <a href="{{ url_for('saida_produto') }}" class="menu-item {% if request.endpoint == 'saida_produto' %}active{% endif %}">
+                    <i class="fas fa-minus-circle"></i>
+                    <span>Saída</span>
+                </a>
+                {% endif %}
+                
+                {% if user_permissoes.get('produtos', true) or session.user_tipo == 'admin' %}
+                <a href="{{ url_for('produtos') }}?estoque=baixo" class="menu-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Estoque Baixo</span>
+                </a>
+                {% endif %}
+                
+                <!-- Menu Relatórios -->
+                {% if user_permissoes.get('movimentacoes', true) or session.user_tipo == 'admin' %}
+                <div class="menu-category">Relatórios</div>
+                <a href="{{ url_for('movimentacoes') }}" class="menu-item {% if request.endpoint == 'movimentacoes' %}active{% endif %}">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Movimentações</span>
+                </a>
+                {% endif %}
+                
+                <!-- Menu Administração -->
+                {% if session.user_tipo == 'admin' %}
+                {% set show_admin_menu = false %}
+                {% if user_permissoes.get('usuarios', false) or 
+                      user_permissoes.get('unidades', false) or
+                      user_permissoes.get('fornecedores', false) or 
+                      user_permissoes.get('categorias', false) or 
+                      user_permissoes.get('setores', false) or
+                      user_permissoes.get('configuracoes', false) or
+                      user_permissoes.get('relatorios', false) or
+                      user_permissoes.get('backup', false) or
+                      user_permissoes.get('logs', false) %}
+                    {% set show_admin_menu = true %}
+                {% endif %}
+                
+                {% if show_admin_menu %}
+                <div class="menu-category">Administração</div>
+                
+                <!-- Submenu Gestão -->
+                {% if user_permissoes.get('usuarios', false) %}
+                <div class="submenu-wrapper">
+                    <a href="#" class="menu-item submenu-toggle" data-submenu="gestao">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestão</span>
+                        <i class="fas fa-chevron-down submenu-arrow ms-auto"></i>
+                    </a>
+                    <div class="submenu" id="submenu-gestao">
+                        {% if user_permissoes.get('usuarios', false) %}
+                        <a href="{{ url_for('usuarios') }}" class="menu-item submenu-item {% if request.endpoint == 'usuarios' %}active{% endif %}">
+                            <i class="fas fa-user-friends"></i>
+                            <span>Usuários</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Submenu Cadastros -->
+                {% if user_permissoes.get('unidades', false) or user_permissoes.get('fornecedores', false) or user_permissoes.get('categorias', false) or user_permissoes.get('setores', false) or session.user_tipo == 'admin' %}
+                <div class="submenu-wrapper">
+                    <a href="#" class="menu-item submenu-toggle" data-submenu="cadastros">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Cadastros</span>
+                        <i class="fas fa-chevron-down submenu-arrow ms-auto"></i>
+                    </a>
+                    <div class="submenu" id="submenu-cadastros">
+                        {% if user_permissoes.get('unidades', false) or session.user_tipo == 'admin' %}
+                        <a href="{{ url_for('listar_unidades') }}" class="menu-item submenu-item {% if request.endpoint == 'listar_unidades' %}active{% endif %}">
+                            <i class="fas fa-hospital-alt"></i>
+                            <span>Unidades</span>
+                        </a>
+                        {% endif %}
+                        {% if user_permissoes.get('fornecedores', false) %}
+                        <a href="{{ url_for('fornecedores') }}" class="menu-item submenu-item {% if request.endpoint == 'fornecedores' %}active{% endif %}">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>Fornecedores</span>
+                        </a>
+                        {% endif %}
+                        {% if user_permissoes.get('categorias', false) %}
+                        <a href="{{ url_for('categorias') }}" class="menu-item submenu-item {% if request.endpoint == 'categorias' %}active{% endif %}">
+                            <i class="fas fa-tags"></i>
+                            <span>Categorias</span>
+                        </a>
+                        {% endif %}
+                        {% if user_permissoes.get('setores', false) %}
+                        <a href="{{ url_for('setores') }}" class="menu-item submenu-item {% if request.endpoint == 'setores' %}active{% endif %}">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>Setores</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Submenu Relatórios Admin -->
+                {% if user_permissoes.get('relatorios', false) %}
+                <div class="submenu-wrapper">
+                    <a href="#" class="menu-item submenu-toggle" data-submenu="relatorios-admin">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Relatórios</span>
+                        <i class="fas fa-chevron-down submenu-arrow ms-auto"></i>
+                    </a>
+                    <div class="submenu" id="submenu-relatorios-admin">
+                        <a href="#" class="menu-item submenu-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Relatório Geral</span>
+                        </a>
+                        <a href="#" class="menu-item submenu-item">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Análise de Estoque</span>
+                        </a>
+                        <a href="#" class="menu-item submenu-item">
+                            <i class="fas fa-calculator"></i>
+                            <span>Relatório Financeiro</span>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Submenu Sistema -->
+                {% if user_permissoes.get('configuracoes', false) or user_permissoes.get('backup', false) or user_permissoes.get('logs', false) %}
+                <div class="submenu-wrapper">
+                    <a href="#" class="menu-item submenu-toggle" data-submenu="sistema">
+                        <i class="fas fa-cogs"></i>
+                        <span>Sistema</span>
+                        <i class="fas fa-chevron-down submenu-arrow ms-auto"></i>
+                    </a>
+                    <div class="submenu" id="submenu-sistema">
+                        {% if user_permissoes.get('configuracoes', false) %}
+                        <a href="{{ url_for('configuracoes') }}" class="menu-item submenu-item {% if request.endpoint == 'configuracoes' %}active{% endif %}">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Configurações</span>
+                        </a>
+                        {% endif %}
+                        {% if user_permissoes.get('backup', false) %}
+                        <a href="#" class="menu-item submenu-item" onclick="showBackupModal()">
+                            <i class="fas fa-database"></i>
+                            <span>Backup</span>
+                        </a>
+                        {% endif %}
+                        {% if user_permissoes.get('logs', false) %}
+                        <a href="#" class="menu-item submenu-item">
+                            <i class="fas fa-history"></i>
+                            <span>Logs do Sistema</span>
+                        </a>
+                        {% endif %}
+                        <a href="#" class="menu-item submenu-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Segurança</span>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% endif %}{# fim do if show_admin_menu #}
+                {% endif %}{# fim do if admin #}
+                
+                <!-- Menu Conta -->
+                <div class="menu-category">Conta</div>
+                <a href="#" class="menu-item">
+                    <i class="fas fa-user"></i>
+                    <span>Meu Perfil</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="menu-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair</span>
+                </a>
+                {% endif %}{# fim do if session.unit_id #}
+                {% endif %}{# fim do if dashboard #}
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Pesquisar...">
+                </div>
+                
+                <div class="header-actions">
+                    <button class="notification-btn" id="notificationBtn">
+                        <i class="far fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    
+                    <div class="dropdown">
+                        <button class="user-btn" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar">
+                                {{ (session.user_nome or 'U')[0]|upper }}
+                            </div>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Meu Perfil</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configurações</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main Content -->
+            <div class="content-wrapper fade-in">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Toggle sidebar on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            
+            // Toggle sidebar on menu button click
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.add('active');
+                });
+            }
+            
+            // Close sidebar on close button click
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.remove('active');
+                });
+            }
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth < 992 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            });
+            
+            // Handle window resize
+            function handleResize() {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.remove('active');
+                }
+            }
+            
+            window.addEventListener('resize', handleResize);
+            
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Initialize popovers
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+            
+            // Add active class to current page in sidebar
+            const currentPath = window.location.pathname;
+            const menuItems = document.querySelectorAll('.menu-item');
+            
+            menuItems.forEach(item => {
+                const link = item.getAttribute('href');
+                if (currentPath === link) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Submenu functionality
+            const submenuToggles = document.querySelectorAll('.submenu-toggle');
+            
+            submenuToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const submenuId = this.getAttribute('data-submenu');
+                    const submenu = document.getElementById(`submenu-${submenuId}`);
+                    
+                    // Toggle current submenu
+                    this.classList.toggle('active');
+                    submenu.classList.toggle('active');
+                    
+                    // Close other submenus
+                    submenuToggles.forEach(otherToggle => {
+                        if (otherToggle !== this) {
+                            const otherSubmenuId = otherToggle.getAttribute('data-submenu');
+                            const otherSubmenu = document.getElementById(`submenu-${otherSubmenuId}`);
+                            otherToggle.classList.remove('active');
+                            otherSubmenu.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            // Backup Modal
+            window.showBackupModal = function() {
+                const modalHtml = `
+                    <div id="backupModal" class="backup-modal">
+                        <div class="backup-modal-content">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-database me-2"></i>
+                                    Backup do Sistema
+                                </h4>
+                                <button type="button" class="btn-close" onclick="closeBackupModal()"></button>
+                            </div>
+                            <div class="mb-4">
+                                <p class="text-muted">Selecione o tipo de backup que deseja realizar:</p>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="backupType" id="backupFull" value="full" checked>
+                                    <label class="form-check-label" for="backupFull">
+                                        <strong>Backup Completo</strong>
+                                        <small class="d-block text-muted">Inclui todos os dados do sistema</small>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="backupType" id="backupData" value="data">
+                                    <label class="form-check-label" for="backupData">
+                                        <strong>Backup de Dados</strong>
+                                        <small class="d-block text-muted">Apenas dados principais (produtos, movimentações)</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary" onclick="performBackup()">
+                                    <i class="fas fa-download me-2"></i>
+                                    Realizar Backup
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="closeBackupModal()">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('backupModal').style.display = 'block';
+            };
+            
+            window.closeBackupModal = function() {
+                const modal = document.getElementById('backupModal');
+                if (modal) {
+                    modal.remove();
+                }
+            };
+            
+            window.performBackup = function() {
+                const backupType = document.querySelector('input[name="backupType"]:checked').value;
+                
+                // Show loading state
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Gerando Backup...';
+                button.disabled = true;
+                
+                // Simulate backup process
+                setTimeout(() => {
+                    closeBackupModal();
+                    
+                    // Show success message
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center position-fixed top-0 start-50 translate-middle-x mt-3" role="alert" style="z-index: 9999;">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Backup realizado com sucesso! Arquivo salvo em downloads/
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', alertHtml);
+                    
+                    // Auto-remove alert after 5 seconds
+                    setTimeout(() => {
+                        const alert = document.querySelector('.alert-success');
+                        if (alert) alert.remove();
+                    }, 5000);
+                }, 2000);
+            };
+            
+            // Close modal when clicking outside
+            document.addEventListener('click', function(e) {
+                const modal = document.getElementById('backupModal');
+                if (modal && e.target === modal) {
+                    closeBackupModal();
+                }
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

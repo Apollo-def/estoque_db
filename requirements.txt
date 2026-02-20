@@ -1,0 +1,25 @@
+# Core
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Werkzeug==3.0.1
+
+# Segurança
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Flask-Talisman==1.0.0
+Flask-Limiter==3.5.0
+python-dotenv==1.0.0
+email-validator==2.1.0.post1
+
+# Frontend
+Flask-Assets==2.1.0
+libsass==0.22.0
+
+# Banco de Dados
+SQLAlchemy==2.0.23
+Flask-Migrate==4.0.5
+
+# Utilitários
+python-dateutil==2.8.2
+Pillow==10.1.0
+python-slugify==8.0.1

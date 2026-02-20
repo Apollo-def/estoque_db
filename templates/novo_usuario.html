@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Usuário - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">👤 Novo Usuário</h2>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="senha" required minlength="6">
+                        <div class="form-text">Mínimo 6 caracteres.</div>
+                    </div>
+                    
+                    {% if session.user_tipo == 'admin' %}
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label">Tipo de Usuário</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="user">Usuário Comum</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Unidades de Acesso</label>
+                        <div class="form-text">Selecione as unidades que este usuário pode acessar:</div>
+                        {% for unit_id, unit_config in unidades.items() %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="unidades" value="{{ unit_id }}" id="unit_{{ unit_id }}">
+                            <label class="form-check-label" for="unit_{{ unit_id }}">
+                                {{ unit_config.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pode_cadastrar" class="form-label">Permissão de Cadastro</label>
+                        <select class="form-select" id="pode_cadastrar" name="pode_cadastrar">
+                            <option value="1">Pode cadastrar produtos e movimentações</option>
+                            <option value="0">Apenas visualização</option>
+                        </select>
+                        <div class="form-text">Define se este usuário pode cadastrar produtos e registrar movimentações.</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('usuarios') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Cadastrar Usuário</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

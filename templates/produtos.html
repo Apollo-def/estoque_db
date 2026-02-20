@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>📦 Gestão de Produtos</h2>
+            {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+            <a href="{{ url_for('novo_produto') }}" class="btn btn-success">➕ Novo Produto</a>
+            {% endif %}
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="busca" placeholder="Buscar produto..." value="{{ request.args.get('busca', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="categoria">
+                            <option value="">Todas categorias</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat }}" {% if request.args.get('categoria') == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="estoque">
+                            <option value="">Todos</option>
+                            <option value="baixo" {% if request.args.get('estoque') == 'baixo' %}selected{% endif %}>Estoque Baixo (≤5)</option>
+                            <option value="zerado" {% if request.args.get('estoque') == 'zerado' %}selected{% endif %}>Sem Estoque</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if produtos %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Quantidade</th>
+                        <th>Status</th>
+                        <th>Cadastrado por</th>
+                        {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+                        <th>Ações</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td>{{ produto.id }}</td>
+                        <td>
+                            <strong>{{ produto.nome }}</strong>
+                            {% if produto.descricao %}
+                            <br><small class="text-muted">{{ produto.descricao[:50] }}{% if produto.descricao|length > 50 %}...{% endif %}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if produto.categoria %}
+                            <span class="badge bg-info">{{ produto.categoria }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if produto.quantidade == 0 %}bg-danger{% elif produto.quantidade <= 5 %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ produto.quantidade }} unidades
+                            </span>
+                        </td>
+                        <td>
+                            {% if produto.quantidade == 0 %}
+                            <span class="badge bg-danger">❌ Sem Estoque</span>
+                            {% elif produto.quantidade <= 5 %}
+                            <span class="badge bg-warning">⚠️ Estoque Baixo</span>
+                            {% else %}
+                            <span class="badge bg-success">✅ Em Estoque</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if produto.usuario_nome %}
+                                {{ produto.usuario_nome }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('editar_produto', id=produto.id) }}" class="btn btn-sm btn-warning">✏️</a>
+                                <a href="{{ url_for('excluir_produto', id=produto.id) }}" 
+                                   class="btn btn-sm btn-danger" 
+                                   onclick="return confirm('Tem certeza que deseja excluir este produto?')">🗑️</a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <h4>📦 Nenhum produto encontrado</h4>
+            <p>Comece cadastrando seu primeiro produto!</p>
+            {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+            <a href="{{ url_for('novo_produto') }}" class="btn btn-primary">Cadastrar Produto</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">📊 Total</h5>
+                <h3 class="text-primary">{{ produtos|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">✅ Em Estoque</h5>
+                <h3 class="text-success">{{ produtos|selectattr('quantidade', '>', 5)|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">⚠️ Estoque Baixo</h5>
+                <h3 class="text-warning">{{ produtos|selectattr('quantidade', '>', 0)|selectattr('quantidade', '<', 6)|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">❌ Sem Estoque</h5>
+                <h3 class="text-danger">{{ produtos|selectattr('quantidade', '==', 0)|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

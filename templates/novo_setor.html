@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Setor - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">
+                    <i class="fas fa-building me-2"></i>Novo Setor
+                </h2>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">
+                            <i class="fas fa-building me-1"></i>Nome do Setor
+                        </label>
+                        <input type="text" class="form-control" id="nome" name="nome" 
+                               placeholder="Ex: Enfermaria, Farmácia, Almoxarifado" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Nome que identificará o setor no sistema
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Descrição
+                        </label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3"
+                                  placeholder="Descreva a função deste setor..."></textarea>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Informações adicionais sobre o setor
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="responsavel" class="form-label">
+                            <i class="fas fa-user me-1"></i>Responsável
+                        </label>
+                        <input type="text" class="form-control" id="responsavel" name="responsavel" 
+                               placeholder="Nome do responsável pelo setor">
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Pessoa responsável pelo setor
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Cadastrar Setor
+                        </button>
+                        <a href="{{ url_for('setores') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

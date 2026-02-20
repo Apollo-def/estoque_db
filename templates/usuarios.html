@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>👥 Gestão de Usuários</h2>
+            <a href="{{ url_for('novo_usuario') }}" class="btn btn-success">➕ Novo Usuário</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                {% if usuarios %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
+                                <th>Permissão</th>
+                                <th>Status</th>
+                                <th>Data de Criação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                            <tr>
+                                <td>{{ usuario.id }}</td>
+                                <td>{{ usuario.nome }}</td>
+                                <td>{{ usuario.email }}</td>
+                                <td>
+                                    {% if usuario.tipo == 'admin' %}
+                                    <span class="badge bg-danger">👑 Administrador</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">👤 Usuário</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if usuario.pode_cadastrar %}
+                                    <span class="badge bg-success">✅ Pode Cadastrar</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">👁 Apenas Visualização</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if usuario.ativo %}
+                                    <span class="badge bg-success">✅ Ativo</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">❌ Inativo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ usuario.data_criacao.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('editar', id=usuario.id) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                                        <a href="{{ url_for('redefinir_senha', id=usuario.id) }}" class="btn btn-sm btn-info">🔑 Redefinir Senha</a>
+                                        <a href="{{ url_for('excluir', id=usuario.id) }}" 
+                                           class="btn btn-sm btn-danger" 
+                                           onclick="return confirm('Tem certeza que deseja excluir este usuário?')">🗑️ Excluir</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    <h4>👥 Nenhum usuário encontrado</h4>
+                    <p>Comece cadastrando seu primeiro usuário!</p>
+                    <a href="{{ url_for('novo_usuario') }}" class="btn btn-primary">Cadastrar Usuário</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

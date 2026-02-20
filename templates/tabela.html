@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários - Sistema de Login{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Usuários Cadastrados</h2>
+            <a href="{{ url_for('cadastro') }}" class="btn btn-success">Novo Usuário</a>
+        </div>
+
+        {% if usuarios %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Data de Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.nome }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.data_criacao.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('editar', id=usuario.id) }}" class="btn btn-sm btn-warning">
+                                ✏️ Editar
+                            </a>
+                            <a href="{{ url_for('redefinir_senha', id=usuario.id) }}" class="btn btn-sm btn-secondary">
+                                🔑 Redefinir Senha
+                            </a>
+                            {% if usuario.id != session.user_id %}
+                            <a href="{{ url_for('excluir', id=usuario.id) }}" 
+                               class="btn btn-sm btn-danger" 
+                               onclick="return confirm('Tem certeza que deseja excluir este usuário?')">
+                                🗑️ Excluir
+                            </a>
+                            {% else %}
+                            <span class="badge bg-secondary">Você</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <h4>Nenhum usuário cadastrado</h4>
+            <p>Cadastre o primeiro usuário para começar!</p>
+            <a href="{{ url_for('cadastro') }}" class="btn btn-primary">Cadastrar Usuário</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-cogs me-2"></i>Configurações do Sistema</h2>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Configurações Gerais</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% for config in configuracoes %}
+                    <div class="mb-3">
+                        <label for="config_{{ config.chave }}" class="form-label">{{ config.chave }}</label>
+                        <input type="text" class="form-control" id="config_{{ config.chave }}" name="config_{{ config.chave }}" value="{{ config.valor }}">
+                        {% if config.descricao %}
+                        <div class="form-text">{{ config.descricao }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Salvar Configurações
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Adicionar Nova Configuração</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="nova_chave" class="form-label">Chave</label>
+                            <input type="text" class="form-control" id="nova_chave" name="config_nova_chave" placeholder="Ex: limite_estoque_baixo">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="novo_valor" class="form-label">Valor</label>
+                            <input type="text" class="form-control" id="novo_valor" name="config_novo_valor" placeholder="Ex: 5">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="nova_descricao" class="form-label">Descrição</label>
+                            <input type="text" class="form-control" id="nova_descricao" name="config_nova_descricao" placeholder="Descrição da configuração">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Adicionar Configuração
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

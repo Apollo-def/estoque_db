@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Produto - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">✏️ Editar Produto</h2>
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome do Produto *</label>
+                                <input type="text" class="form-control" id="nome" name="nome" value="{{ produto.nome }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categoria" class="form-label">Categoria</label>
+                                <input type="text" class="form-control" id="categoria" name="categoria" value="{{ produto.categoria or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3">{{ produto.descricao or '' }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="quantidade" class="form-label">Quantidade *</label>
+                                <input type="number" class="form-control" id="quantidade" name="quantidade" value="{{ produto.quantidade }}" min="0" required>
+                                <div class="form-text">
+                                    {% if produto.quantidade == 0 %}
+                                    <span class="text-danger">❌ Sem estoque</span>
+                                    {% elif produto.quantidade <= 5 %}
+                                    <span class="text-warning">⚠️ Estoque baixo</span>
+                                    {% else %}
+                                    <span class="text-success">✅ Em estoque</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categoria" class="form-label">Categoria</label>
+                                <input type="text" class="form-control" id="categoria" name="categoria" value="{{ produto.categoria or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">📊 Informações do Produto</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">ID: {{ produto.id }}</small><br>
+                                    <small class="text-muted">Cadastrado: {{ produto.data_criacao.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Última atualização: {{ produto.data_atualizacao.strftime('%d/%m/%Y %H:%M') }}</small><br>
+                                    <small class="text-muted">Cadastrado por: {{ produto.usuario.nome }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('produtos') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-warning">💾 Atualizar Produto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function adicionarEstoque(quantidade) {
+    const campoQuantidade = document.getElementById('quantidade');
+    const valorAtual = parseInt(campoQuantidade.value) || 0;
+    campoQuantidade.value = valorAtual + quantidade;
+}
+
+function zerarEstoque() {
+    if (confirm('Tem certeza que deseja zerar o estoque deste produto?')) {
+        document.getElementById('quantidade').value = 0;
+    }
+}
+
+// Formatar preço
+document.getElementById('preco').addEventListener('blur', function() {
+    if (this.value && !isNaN(this.value)) {
+        this.value = parseFloat(this.value).toFixed(2);
+    }
+});
+
+// Atualizar status baseado na quantidade
+document.getElementById('quantidade').addEventListener('input', function() {
+    const valor = parseInt(this.value) || 0;
+    const formText = this.parentElement.querySelector('.form-text');
+    
+    if (valor === 0) {
+        formText.innerHTML = '<span class="text-danger">❌ Sem estoque</span>';
+    } else if (valor <= 5) {
+        formText.innerHTML = '<span class="text-warning">⚠️ Estoque baixo</span>';
+    } else {
+        formText.innerHTML = '<span class="text-success">✅ Em estoque</span>';
+    }
+});
+</script>
+{% endblock %}

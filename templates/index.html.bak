@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1>
+        {% if session.user_tipo == 'admin' %}
+        <i class="fas fa-crown me-2"></i>Bem-vindo, {{ session.user_nome }}!
+        {% else %}
+        <i class="fas fa-user me-2"></i>Bem-vindo, {{ session.user_nome }}!
+        {% endif %}
+    </h1>
+    <p class="subtitle">
+        {% if session.user_tipo == 'admin' %}
+        Gerencie seu estoque de forma eficiente e mantenha o controle total sobre seus produtos e usuários.
+        {% else %}
+        Acompanhe o estoque e visualize as informações mais importantes do sistema.
+        {% endif %}
+    </p>
+</div>
+
+<!-- Dashboard Cards -->
+<div class="dashboard-cards">
+    <div class="card primary">
+        <div class="card-icon">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="card-content">
+            <h3>Total de Produtos</h3>
+            <div class="value">{{ total_produtos or 0 }}</div>
+            <div class="trend">
+                <i class="fas fa-arrow-up"></i>
+                <span>12% no último mês</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card warning">
+        <div class="card-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="card-content">
+            <h3>Estoque Baixo</h3>
+            <div class="value">{{ produtos_baixo_estoque or 0 }}</div>
+            <div class="trend down">
+                <i class="fas fa-arrow-down"></i>
+                <span>5% no último mês</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card success">
+        <div class="card-icon">
+            <i class="fas fa-arrow-down"></i>
+        </div>
+        <div class="card-content">
+            <h3>Entradas</h3>
+            <div class="value">{{ total_entradas or 0 }}</div>
+            <div class="trend">
+                <i class="fas fa-arrow-up"></i>
+                <span>8% no último mês</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card danger">
+        <div class="card-icon">
+            <i class="fas fa-arrow-up"></i>
+        </div>
+        <div class="card-content">
+            <h3>Saídas</h3>
+            <div class="value">{{ total_saidas or 0 }}</div>
+            <div class="trend">
+                <i class="fas fa-arrow-up"></i>
+                <span>15% no último mês</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+{% if movimentacoes_recentes %}
+<div class="recent-activity">
+    <div class="section-header">
+        <h2><i class="fas fa-history me-2"></i>Atividade Recente</h2>
+        <a href="{{ url_for('movimentacoes') }}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
+    </div>
+    
+    <ul class="activity-list">
+        {% for mov in movimentacoes_recentes %}
+        <li class="activity-item">
+            <div class="activity-icon">
+                {% if mov.tipo == 'entrada' %}
+                    <i class="fas fa-arrow-down text-success"></i>
+                {% else %}
+                    <i class="fas fa-arrow-up text-danger"></i>
+                {% endif %}
+            </div>
+            <div class="activity-details">
+                <h4>
+                    {% if mov.tipo == 'entrada' %}
+                        Entrada de Produto
+                    {% else %}
+                        Saída de Produto
+                    {% endif %}
+                </h4>
+                <p>Produto: {{ mov.produto_nome }} - Quantidade: {{ mov.quantidade }}</p>
+                {% if mov.origem %}
+                <p><small><strong>Origem:</strong> {{ mov.origem }}</small></p>
+                {% endif %}
+                {% if mov.destino %}
+                <p><small><strong>Destino:</strong> {{ mov.destino }}</small></p>
+                {% endif %}
+                {% if mov.nota_fiscal %}
+                <p><small><strong>NF:</strong> {{ mov.nota_fiscal }}</small></p>
+                {% endif %}
+                {% if mov.ordem_servico %}
+                <p><small><strong>OS:</strong> {{ mov.ordem_servico }}</small></p>
+                {% endif %}
+                <small>
+                    {% if mov.data_movimentacao %}
+                        {% if mov.data_movimentacao is string %}
+                            {% set data = mov.data_movimentacao.split(' ')[0] %}
+                            {% set hora = mov.data_movimentacao.split(' ')[1] if ' ' in mov.data_movimentacao else '00:00' %}
+                            {{ data }} {{ hora }}
+                        {% else %}
+                            {{ mov.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    {% else %}
+                        Data não disponível
+                    {% endif %}
+                </small>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="recent-activity">
+    <div class="section-header">
+        <h2><i class="fas fa-history me-2"></i>Atividade Recente</h2>
+    </div>
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle me-2"></i>
+        Nenhuma movimentação registrada ainda.
+        <br>
+        <small>As movimentações aparecerão aqui quando você começar a registrar entradas e saídas de produtos.</small>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-bell me-2"></i>Notificações</h2>
+            <button class="btn btn-outline-secondary" onclick="marcarTodasComoLidas()">
+                <i class="fas fa-check-double me-2"></i>Marcar Todas como Lidas
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                {% if notificacoes %}
+                <div class="list-group list-group-flush">
+                    {% for notificacao in notificacoes %}
+                    <div class="list-group-item {% if not notificacao.lida %}list-group-item-primary{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ notificacao.titulo }}</h5>
+                            <small>{{ notificacao.data_criacao.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ notificacao.mensagem }}</p>
+                        {% if not notificacao.lida %}
+                        <small>
+                            <a href="{{ url_for('marcar_notificacao_lida', id=notificacao.id) }}" class="text-decoration-none">
+                                <i class="fas fa-check me-1"></i>Marcar como lida
+                            </a>
+                        </small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhuma notificação</h4>
+                    <p class="text-muted">Você não tem notificações no momento.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function marcarTodasComoLidas() {
+    if (confirm('Marcar todas as notificações como lidas?')) {
+        // Simular clique em todos os links de marcar como lida
+        const links = document.querySelectorAll('a[href*="marcar_notificacao_lida"]');
+        links.forEach(link => link.click());
+    }
+}
+</script>
+{% endblock %}
