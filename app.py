@@ -1803,7 +1803,6 @@ def excluir_movimentacao(id):
 if __name__ == '__main__':
     # Antes de iniciar, garantir que o schema central contenha colunas esperadas
     def ensure_central_schema():
-        conn = None
         try:
             # Usar sqlite3 para inspeção e alteração direta do arquivo central.db
             conn = sqlite3.connect(db_path)
@@ -1830,11 +1829,6 @@ if __name__ == '__main__':
                 conn.close()
             except Exception:
                 pass
-            if conn:
-                try:
-                    conn.close()
-                except Exception:
-                    pass
 
     # Inicializar banco central se não existir e garantir colunas compatíveis
     try:

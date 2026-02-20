@@ -1,298 +1,297 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema de Estoque</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
-</head>
-<body>
-    <div class="login-container">
-        <div class="login-box">
-            <div class="login-header">
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login - Sistema de Estoque</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-header">
 
-                <h1>Bem-vindo de volta</h1>
-                <p>Faça login para acessar o painel de controle</p>
-            </div>
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <form method="POST" action="{{ url_for('login') }}" id="loginForm" novalidate>
-                <div class="form-group">
-                    <label for="email">E-mail</label>
-                    <div class="input-field">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" name="email" placeholder="seu@email.com" required>
-                    </div>
-                    <div class="error-message" id="emailError">Por favor, insira um e-mail válido</div>
+                    <h1>Bem-vindo de volta</h1>
                 </div>
                 
-                <div class="form-group">
-                    <div class="form-header">
-                        <label for="senha">Senha</label>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" action="{{ url_for('login') }}" id="loginForm" novalidate>
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <div class="input-field">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                        </div>
+                        <div class="error-message" id="emailError">Por favor, insira um e-mail válido</div>
                     </div>
-                    <div class="input-field">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="senha" name="senha" placeholder="••••••••" required minlength="6">
-                        <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar senha">
-                            <i class="fas fa-eye" id="eyeIcon"></i>
+                    
+                    <div class="form-group">
+                        <div class="form-header">
+                            <label for="senha">Senha</label>
+                        </div>
+                        <div class="input-field">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="senha" name="senha" placeholder="••••••••" required minlength="6">
+                            <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar senha">
+                                <i class="fas fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" id="passwordError">A senha deve ter pelo menos 6 caracteres</div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <button type="submit" class="btn" id="loginButton">
+                            <span class="btn-text">Entrar</span>
+                            <i class="fas fa-arrow-right ml-2"></i>
                         </button>
                     </div>
-                    <div class="error-message" id="passwordError">A senha deve ter pelo menos 6 caracteres</div>
-                </div>
-                
-                <div class="form-group" style="margin-top: 2rem;">
-                    <button type="submit" class="btn" id="loginButton">
-                        <span class="btn-text">Entrar</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
-                </div>
-                
-                <div class="form-footer">
-                    Não tem uma conta? <a href="{{ url_for('cadastro') }}">Criar conta</a>
-                </div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Forgot Password Modal -->
-    <div id="forgotPasswordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Redefinir Senha</h2>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>Digite seu endereço de e-mail e enviaremos um link para redefinir sua senha.</p>
-                <div class="form-group">
-                    <input type="email" id="resetEmail" placeholder="Seu e-mail" class="input-field">
-                </div>
-                <button type="button" id="sendResetLink" class="login-button">Enviar Link</button>
-                <div id="resetMessage" class="message"></div>
+                    
+                    <div class="form-footer">
+                        Não tem uma conta? <a href="{{ url_for('cadastro') }}">Criar conta</a>
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elements
-            const loginForm = document.getElementById('loginForm');
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('senha');
-            const togglePassword = document.getElementById('togglePassword');
-            const eyeIcon = document.getElementById('eyeIcon');
-            const loginButton = document.getElementById('loginButton');
-            const emailError = document.getElementById('emailError');
-            const passwordError = document.getElementById('passwordError');
-            
-            // Toggle password visibility
-            if (togglePassword && passwordInput && eyeIcon) {
-                togglePassword.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-                    
-                    // Toggle eye icon
-                    eyeIcon.classList.toggle('fa-eye');
-                    eyeIcon.classList.toggle('fa-eye-slash');
-                    
-                    // Focus back on password field
-                    passwordInput.focus();
-                });
-                togglePassword.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.key === ' ') {
+        
+        <!-- Forgot Password Modal -->
+        <div id="forgotPasswordModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Redefinir Senha</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>Digite seu endereço de e-mail e enviaremos um link para redefinir sua senha.</p>
+                    <div class="form-group">
+                        <input type="email" id="resetEmail" placeholder="Seu e-mail" class="input-field">
+                    </div>
+                    <button type="button" id="sendResetLink" class="login-button">Enviar Link</button>
+                    <div id="resetMessage" class="message"></div>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Elements
+                const loginForm = document.getElementById('loginForm');
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('senha');
+                const togglePassword = document.getElementById('togglePassword');
+                const eyeIcon = document.getElementById('eyeIcon');
+                const loginButton = document.getElementById('loginButton');
+                const emailError = document.getElementById('emailError');
+                const passwordError = document.getElementById('passwordError');
+                
+                // Toggle password visibility
+                if (togglePassword && passwordInput && eyeIcon) {
+                    togglePassword.addEventListener('click', function(e) {
                         e.preventDefault();
-                        this.click();
-                    }
-                });
-            }
-
-            // Form submission handling
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    if (loginForm.checkValidity()) {
-                        // Show loading state
-                        const originalButtonText = loginButton.innerHTML;
-                        loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
-                        loginButton.disabled = true;
+                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        passwordInput.setAttribute('type', type);
                         
-                        // Add loading class to form
-                        loginForm.classList.add('is-submitting');
+                        // Toggle eye icon
+                        eyeIcon.classList.toggle('fa-eye');
+                        eyeIcon.classList.toggle('fa-eye-slash');
                         
-                        // Prevent double submission
-                        const isSubmitting = loginForm.getAttribute('data-submitting') === 'true';
-                        if (isSubmitting) {
+                        // Focus back on password field
+                        passwordInput.focus();
+                    });
+                    togglePassword.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            return false;
+                            this.click();
                         }
+                    });
+                }
+
+                // Form submission handling
+                if (loginForm) {
+                    loginForm.addEventListener('submit', function(e) {
+                        if (loginForm.checkValidity()) {
+                            // Show loading state
+                            const originalButtonText = loginButton.innerHTML;
+                            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Autenticando...';
+                            loginButton.disabled = true;
+                            
+                            // Add loading class to form
+                            loginForm.classList.add('is-submitting');
+                            
+                            // Prevent double submission
+                            const isSubmitting = loginForm.getAttribute('data-submitting') === 'true';
+                            if (isSubmitting) {
+                                e.preventDefault();
+                                return false;
+                            }
+                            
+                            loginForm.setAttribute('data-submitting', 'true');
+                            
+                            // Simulate form submission (remove in production)
+                            setTimeout(() => {
+                                loginButton.innerHTML = originalButtonText;
+                                loginButton.disabled = false;
+                                loginForm.classList.remove('is-submitting');
+                                loginForm.setAttribute('data-submitting', 'false');
+                            }, 2000);
+                        }
+                    });
+                    
+                    // Add input validation and styling
+                    const inputs = loginForm.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        // Add focus and blur effects
+                        input.addEventListener('focus', function() {
+                            this.parentElement.classList.add('focused');
+                        });
                         
-                        loginForm.setAttribute('data-submitting', 'true');
+                        input.addEventListener('blur', function() {
+                            this.parentElement.classList.remove('focused');
+                            
+                            // Add/remove error class based on validation
+                            if (this.checkValidity()) {
+                                this.parentElement.classList.remove('error');
+                            } else {
+                                this.parentElement.classList.add('error');
+                            }
+                        });
                         
-                        // Simulate form submission (remove in production)
-                        setTimeout(() => {
-                            loginButton.innerHTML = originalButtonText;
-                            loginButton.disabled = false;
-                            loginForm.classList.remove('is-submitting');
-                            loginForm.setAttribute('data-submitting', 'false');
-                        }, 2000);
+                        // Real-time validation
+                        input.addEventListener('input', function() {
+                            if (this.checkValidity()) {
+                                this.parentElement.classList.remove('error');
+                            }
+                        });
+                    });
+                }
+                
+                // Add animation to login button on hover
+                if (loginButton) {
+                    loginButton.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-2px)';
+                        this.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.2)';
+                    });
+                    
+                    loginButton.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = 'none';
+                    });
+                    
+                    loginButton.addEventListener('mousedown', function() {
+                        this.style.transform = 'translateY(1px)';
+                    });
+                    
+                    loginButton.addEventListener('mouseup', function() {
+                        this.style.transform = 'translateY(-2px)';
+                    });
+                }
+                
+                // Forgot Password Modal
+                const modal = document.getElementById('forgotPasswordModal');
+                const forgotLink = document.getElementById('forgotPasswordLink');
+                const closeBtn = document.querySelector('.close-modal');
+                const sendResetBtn = document.getElementById('sendResetLink');
+                const resetMessage = document.getElementById('resetMessage');
+                const resetEmail = document.getElementById('resetEmail');
+                
+                // Open modal when clicking Forgot Password
+                if (forgotLink) {
+                    forgotLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        modal.style.display = 'flex';
+                        resetEmail.focus();
+                    });
+                }
+                
+                // Close modal when clicking X
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        resetMessage.style.display = 'none';
+                        resetEmail.value = '';
+                    });
+                }
+                
+                // Close modal when clicking outside content
+                window.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        resetMessage.style.display = 'none';
+                        resetEmail.value = '';
                     }
                 });
                 
-                // Add input validation and styling
-                const inputs = loginForm.querySelectorAll('input');
-                inputs.forEach(input => {
-                    // Add focus and blur effects
-                    input.addEventListener('focus', function() {
-                        this.parentElement.classList.add('focused');
-                    });
-                    
-                    input.addEventListener('blur', function() {
-                        this.parentElement.classList.remove('focused');
+                // Handle reset password form submission
+                if (sendResetBtn) {
+                    sendResetBtn.addEventListener('click', function() {
+                        const email = resetEmail.value.trim();
                         
-                        // Add/remove error class based on validation
-                        if (this.checkValidity()) {
-                            this.parentElement.classList.remove('error');
-                        } else {
-                            this.parentElement.classList.add('error');
+                        // Basic email validation
+                        if (!email) {
+                            showMessage('Por favor, insira seu endereço de e-mail.', 'error');
+                            return;
                         }
-                    });
-                    
-                    // Real-time validation
-                    input.addEventListener('input', function() {
-                        if (this.checkValidity()) {
-                            this.parentElement.classList.remove('error');
+                        
+                        if (!isValidEmail(email)) {
+                            showMessage('Por favor, insira um endereço de e-mail válido.', 'error');
+                            return;
                         }
+                        
+                        // Show loading state
+                        const originalText = sendResetBtn.textContent;
+                        sendResetBtn.disabled = true;
+                        sendResetBtn.textContent = 'Enviando...';
+                        
+                        // Simulate API call (replace with actual API call)
+                        setTimeout(() => {
+                            // In a real app, you would make an API call to your backend here
+                            // For example: fetch('/api/reset-password', { method: 'POST', body: JSON.stringify({ email }) })
+                            
+                            // Show success message
+                            showMessage('Um link para redefinição de senha foi enviado para o seu e-mail.', 'success');
+                            sendResetBtn.textContent = originalText;
+                            sendResetBtn.disabled = false;
+                            
+                            // Clear form and close modal after 3 seconds
+                            setTimeout(() => {
+                                modal.style.display = 'none';
+                                resetMessage.style.display = 'none';
+                                resetEmail.value = '';
+                            }, 3000);
+                        }, 1500);
                     });
-                });
-            }
-            
-            // Add animation to login button on hover
-            if (loginButton) {
-                loginButton.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                    this.style.boxShadow = '0 4px 12px rgba(37, 99, 235, 0.2)';
-                });
+                }
                 
-                loginButton.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                    this.style.boxShadow = 'none';
-                });
+                // Helper function to show messages
+                function showMessage(message, type) {
+                    resetMessage.textContent = message;
+                    resetMessage.className = 'message ' + type;
+                    resetMessage.style.display = 'block';
+                }
                 
-                loginButton.addEventListener('mousedown', function() {
-                    this.style.transform = 'translateY(1px)';
-                });
+                // Email validation helper
+                function isValidEmail(email) {
+                    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return re.test(email);
+                }
                 
-                loginButton.addEventListener('mouseup', function() {
-                    this.style.transform = 'translateY(-2px)';
-                });
-            }
-            
-            // Forgot Password Modal
-            const modal = document.getElementById('forgotPasswordModal');
-            const forgotLink = document.getElementById('forgotPasswordLink');
-            const closeBtn = document.querySelector('.close-modal');
-            const sendResetBtn = document.getElementById('sendResetLink');
-            const resetMessage = document.getElementById('resetMessage');
-            const resetEmail = document.getElementById('resetEmail');
-            
-            // Open modal when clicking Forgot Password
-            if (forgotLink) {
-                forgotLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    modal.style.display = 'flex';
-                    resetEmail.focus();
-                });
-            }
-            
-            // Close modal when clicking X
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function() {
-                    modal.style.display = 'none';
-                    resetMessage.style.display = 'none';
-                    resetEmail.value = '';
-                });
-            }
-            
-            // Close modal when clicking outside content
-            window.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                    resetMessage.style.display = 'none';
-                    resetEmail.value = '';
+                // Auto-focus email field on page load
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    setTimeout(() => {
+                        emailInput.focus();
+                    }, 500);
                 }
             });
-            
-            // Handle reset password form submission
-            if (sendResetBtn) {
-                sendResetBtn.addEventListener('click', function() {
-                    const email = resetEmail.value.trim();
-                    
-                    // Basic email validation
-                    if (!email) {
-                        showMessage('Por favor, insira seu endereço de e-mail.', 'error');
-                        return;
-                    }
-                    
-                    if (!isValidEmail(email)) {
-                        showMessage('Por favor, insira um endereço de e-mail válido.', 'error');
-                        return;
-                    }
-                    
-                    // Show loading state
-                    const originalText = sendResetBtn.textContent;
-                    sendResetBtn.disabled = true;
-                    sendResetBtn.textContent = 'Enviando...';
-                    
-                    // Simulate API call (replace with actual API call)
-                    setTimeout(() => {
-                        // In a real app, you would make an API call to your backend here
-                        // For example: fetch('/api/reset-password', { method: 'POST', body: JSON.stringify({ email }) })
-                        
-                        // Show success message
-                        showMessage('Um link para redefinição de senha foi enviado para o seu e-mail.', 'success');
-                        sendResetBtn.textContent = originalText;
-                        sendResetBtn.disabled = false;
-                        
-                        // Clear form and close modal after 3 seconds
-                        setTimeout(() => {
-                            modal.style.display = 'none';
-                            resetMessage.style.display = 'none';
-                            resetEmail.value = '';
-                        }, 3000);
-                    }, 1500);
-                });
-            }
-            
-            // Helper function to show messages
-            function showMessage(message, type) {
-                resetMessage.textContent = message;
-                resetMessage.className = 'message ' + type;
-                resetMessage.style.display = 'block';
-            }
-            
-            // Email validation helper
-            function isValidEmail(email) {
-                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return re.test(email);
-            }
-            
-            // Auto-focus email field on page load
-            const emailInput = document.getElementById('email');
-            if (emailInput) {
-                setTimeout(() => {
-                    emailInput.focus();
-                }, 500);
-            }
-        });
-    </script>
-</body>
-</html>
+        </script>
+    </body>
+    </html>
 

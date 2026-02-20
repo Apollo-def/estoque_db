@@ -64,8 +64,8 @@
 
 body {
     font-family: var(--font-sans);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-attachment: fixed;
+    background: url('images/login.png') no-repeat center center fixed;
+    background-size: cover;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -581,7 +581,7 @@ label {
 /* Suporte para modo escuro */
 @media (prefers-color-scheme: dark) {
     body {
-        background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%);
+        /* background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%); */
     }
 
     .login-box {

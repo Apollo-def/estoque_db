@@ -1,114 +1,44 @@
 # Sistema Multi-Tenant de Controle de Estoque Hospitalar
 
-Um sistema web completo para gestão de estoque hospitalar com arquitetura multi-tenant, desenvolvido com Flask, Bootstrap e SQLite.
+!Python
+!Flask
+!License
+
+Um sistema web completo e robusto para gestão de estoque hospitalar com arquitetura **Multi-Tenant**, desenvolvido com Flask, Bootstrap 5 e SQLite/PostgreSQL.
+
+O sistema permite que uma única instalação gerencie múltiplas unidades hospitalares, mantendo os dados de estoque, movimentações e configurações completamente isolados entre si.
 
 ## 🚀 Funcionalidades
 
-### Gestão de Usuários
-- ✅ Login e cadastro de usuários
-- ✅ Controle de acesso baseado em papéis (Admin/Usuário)
-- ✅ Permissões por unidade hospitalar
-- ✅ Senhas criptografadas com hash
-- ✅ Sessões seguras
+### 🏢 Gestão Multi-Tenant
+- **Isolamento Total:** Dados de cada unidade em bancos de dados separados.
+- **Seleção de Contexto:** Usuários navegam entre unidades permitidas sem relogar.
+- **Configuração Dinâmica:** Suporte híbrido (algumas unidades em SQLite, outras em PostgreSQL).
 
-### Gestão de Unidades
-- ✅ Cadastro de unidades hospitalares
-- ✅ Isolamento de dados por tenant
-- ✅ Configuração dinâmica de bancos de dados
+### 👥 Gestão de Usuários e Acesso
+- **RBAC:** Controle de acesso baseado em papéis (Admin/Usuário).
+- **Permissões Granulares:** Controle detalhado de acesso a menus e funções.
+- **Segurança:** Senhas com hash (Werkzeug) e proteção de sessão.
 
-### Gestão de Produtos
-- ✅ Cadastro de produtos com categorias
-- ✅ Controle de estoque mínimo
-- ✅ Códigos de barras
-- ✅ Unidades de medida
+### 📦 Controle de Estoque
+- **Catálogo:** Produtos, Categorias, Fornecedores e Setores.
+- **Rastreabilidade:** Entradas e Saídas com registro de Nota Fiscal, Lote e Responsável.
+- **Alertas:** Notificações visuais para estoque baixo ou zerado.
+- **Dashboard:** Visão geral com indicadores de desempenho (KPIs).
 
-### Controle de Movimentações
-- ✅ Registro de entradas e saídas
-- ✅ Rastreamento de origem/destino
-- ✅ Notas fiscais e ordens de serviço
-- ✅ Histórico completo
+## 🛠️ Tecnologias
 
-### Relatórios e Dashboard
-- ✅ Dashboard com estatísticas
-- ✅ Produtos mais movimentados
-- ✅ Alertas de estoque baixo
-- ✅ Interface responsiva com Bootstrap
+- **Backend:** Python, Flask, SQLAlchemy.
+- **Frontend:** HTML5, CSS3, Bootstrap 5, JavaScript.
+- **Banco de Dados:** SQLite (Padrão), PostgreSQL (Suportado).
+- **Infraestrutura:** Docker, Render, Heroku.
 
-## 🛠️ Tecnologias Utilizadas
+##  Instalação
 
-### Backend
-- **Flask** - Framework web Python
-- **Flask-SQLAlchemy** - ORM para banco de dados
-- **Werkzeug** - Criptografia de senhas
-
-### Frontend
-- **HTML5**
-- **CSS3**
-- **Bootstrap 5** - Framework CSS responsivo
-- **Jinja2** - Templates
-
-### Banco de Dados
-- **SQLite** - Banco central e por tenant
-- **PostgreSQL** - Suporte opcional para produção
-
-### Infraestrutura
-- **Arquitetura Multi-Tenant** - Isolamento por unidade
-- **Database Manager** - Gerenciamento dinâmico de conexões
-- **Tenant DB** - Abstração de acesso aos bancos
-
-## 📁 Estrutura do Projeto
-
-```
-sistema-estoque-hospitalar/
-│
-├── app.py                    # Aplicação principal Flask
-├── database_config.py        # Configuração de unidades e bancos
-├── database_manager.py       # Gerenciamento de conexões DB
-├── tenant_db.py             # Abstração de acesso aos tenants
-├── requirements.txt          # Dependências Python
-├── README.md                # Documentação
-│
-├── instance/                # Bancos de dados
-│   ├── central.db          # Banco central (usuários, unidades)
-│   ├── hospital_*.db       # Bancos por unidade
-│
-├── scripts/                 # Scripts utilitários
-│   ├── init_all_dbs.py     # Inicialização de bancos
-│   ├── make_admin.py       # Criação de usuário admin
-│   ├── inspect_central.py  # Inspeção do banco central
-│   ├── normalize_unidades_access.py # Normalização de permissões
-│
-├── templates/               # Templates HTML
-│   ├── base.html           # Template base
-│   ├── login.html          # Página de login
-│   ├── cadastro.html       # Página de cadastro
-│   ├── index.html          # Dashboard
-│   ├── tabela.html         # Gestão de usuários
-│   ├── editar.html         # Editar usuário
-│   ├── produtos.html       # Gestão de produtos
-│   ├── movimentacoes.html  # Controle de movimentações
-│   ├── selecionar_unidade.html # Seleção de unidade
-│   └── ...
-│
-├── static/                  # Arquivos estáticos
-│   ├── css/
-│   ├── js/
-│   ├── img/
-│   └── scss/
-│
-└── app/                     # Estrutura modular (opcional)
-    ├── models/
-    ├── routes/
-    ├── forms/
-    └── utils/
-```
-
-## 📦 Instalação
-
-### 1. Clonar o repositório
+### 1. Clonar o Repositório
 ```bash
-git clone <repositorio>
-cd projeto_login
+git clone <seu-repositorio>
+cd estoque_db
 ```
 
 ### 2. Criar ambiente virtual (recomendado)
