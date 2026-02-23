@@ -90,6 +90,8 @@ class DatabaseManager:
                     id TEXT PRIMARY KEY,
                     nome TEXT NOT NULL,
                     descricao TEXT,
+                    database TEXT,
+                    type TEXT DEFAULT 'sqlite',
                     ativa INTEGER DEFAULT 1,
                     data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
