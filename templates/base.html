@@ -466,5 +466,22 @@
     </script>
     
     {% block scripts %}{% endblock %}
+
+    {# ── Injeção automática de token CSRF em todos os formulários POST ── #}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        (function () {
+            var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function (form) {
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = token;
+                    form.appendChild(input);
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

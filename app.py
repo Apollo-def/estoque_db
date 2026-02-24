@@ -10,6 +10,7 @@ load_dotenv()
 
 from database_manager import db_manager
 from models import db, Usuario, Unidade
+from extensions import csrf, limiter
 
 # ========================
 # CONFIGURAÇÃO DO APP
@@ -19,14 +20,33 @@ from models import db, Usuario, Unidade
 db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance', 'central.db')
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'sistema_estoque_hospitalar_2024')
 
-# Configuração do banco de dados central
+# ── Chave secreta ──────────────────────────────────────────────────────────────
+_secret = os.getenv('SECRET_KEY', '')
+if not _secret:
+    raise RuntimeError(
+        'SECRET_KEY não definida! Adicione-a ao arquivo .env.'
+    )
+app.config['SECRET_KEY'] = _secret
+
+# ── Banco de dados central ─────────────────────────────────────────────────────
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Inicializar SQLAlchemy com o app
+# ── Segurança dos cookies de sessão ────────────────────────────────────────────
+app.config['SESSION_COOKIE_HTTPONLY'] = True          # JS não acessa o cookie
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'         # Mitiga CSRF de terceiros
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+app.config['PERMANENT_SESSION_LIFETIME'] = int(os.getenv('PERMANENT_SESSION_LIFETIME', 3600))
+
+# ── WTF / CSRF ─────────────────────────────────────────────────────────────────
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600
+
+# Inicializar extensões
 db.init_app(app)
+csrf.init_app(app)
+limiter.init_app(app)
 
 
 # ========================
@@ -175,6 +195,17 @@ if __name__ == '__main__':
                 conn.commit()
                 print('Coluna permissoes_menu adicionada em usuarios (central.db)')
 
+            # Colunas de proteção contra brute force
+            if 'tentativas_login' not in cols:
+                cur.execute("ALTER TABLE usuarios ADD COLUMN tentativas_login INTEGER DEFAULT 0")
+                conn.commit()
+                print('Coluna tentativas_login adicionada em usuarios (central.db)')
+
+            if 'bloqueado_ate' not in cols:
+                cur.execute("ALTER TABLE usuarios ADD COLUMN bloqueado_ate DATETIME")
+                conn.commit()
+                print('Coluna bloqueado_ate adicionada em usuarios (central.db)')
+
         except Exception as e:
             print(f"Aviso ao garantir schema central: {e}")
         finally:
@@ -191,4 +222,5 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Aviso: {e}")
 
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    _debug = os.getenv('FLASK_DEBUG', 'False').strip().lower() in ('1', 'true')
+    app.run(debug=_debug, host='0.0.0.0', port=5000)
