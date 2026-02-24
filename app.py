@@ -50,6 +50,17 @@ def attach_unit_db():
 
 
 # ========================
+# NGROK WARNING SKIP
+# ========================
+
+@app.after_request
+def add_ngrok_skip_header(response):
+    """Adiciona header para ignorar aviso do ngrok"""
+    response.headers['ngrok-skip-browser-warning'] = 'true'
+    return response
+
+
+# ========================
 # REGISTER BLUEPRINTS
 # ========================
 
