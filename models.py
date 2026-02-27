@@ -6,6 +6,11 @@ import ast
 
 db = SQLAlchemy()
 
+# Máximo de tentativas antes de bloquear a conta
+MAX_TENTATIVAS_LOGIN = 5
+# Duração do bloqueio em minutos
+BLOQUEIO_MINUTOS = 15
+
 
 class Usuario(db.Model):
     """Modelo de Usuário (banco central)"""
@@ -20,6 +25,9 @@ class Usuario(db.Model):
     permissoes_menu = db.Column(db.Text)
     ativo = db.Column(db.Integer, default=1)
     data_criacao = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    # Proteção contra brute force
+    tentativas_login = db.Column(db.Integer, default=0)
+    bloqueado_ate = db.Column(db.DateTime, nullable=True)
     
     def get_unidades_acesso(self):
         if not self.unidades_acesso or not self.unidades_acesso.strip():
@@ -45,7 +53,25 @@ class Usuario(db.Model):
     
     def is_admin(self):
         return self.tipo == 'admin'
-    
+
+    def esta_bloqueado(self):
+        """Verifica se o usuário está com login bloqueado por excesso de tentativas"""
+        if self.bloqueado_ate and datetime.now(timezone.utc) < self.bloqueado_ate.replace(tzinfo=timezone.utc):
+            return True
+        return False
+
+    def registrar_tentativa_falha(self):
+        """Incrementa contador; bloqueia após MAX_TENTATIVAS_LOGIN falhas"""
+        from datetime import timedelta
+        self.tentativas_login = (self.tentativas_login or 0) + 1
+        if self.tentativas_login >= MAX_TENTATIVAS_LOGIN:
+            self.bloqueado_ate = datetime.now(timezone.utc) + timedelta(minutes=BLOQUEIO_MINUTOS)
+
+    def resetar_tentativas(self):
+        """Reseta o contador após login bem-sucedido"""
+        self.tentativas_login = 0
+        self.bloqueado_ate = None
+
     def __repr__(self):
         return f'<Usuario {self.nome}>'
 

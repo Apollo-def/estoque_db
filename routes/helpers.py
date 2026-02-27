@@ -20,6 +20,17 @@ def get_unit_db():
     return None
 
 
+def login_required(f):
+    """Decorator que exige que o usuário esteja autenticado"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Faça login para acessar esta página.', 'warning')
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def admin_required(f):
     """Decorator para verificar se é admin ou tem permissão de cadastro"""
     @wraps(f)

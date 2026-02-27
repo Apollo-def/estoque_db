@@ -27,6 +27,7 @@
                 {% endwith %}
                 
                 <form method="POST" id="registerForm" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="row">
                         <div class="col-12 mb-3">
                             <label for="nome" class="form-label">Nome Completo</label>
