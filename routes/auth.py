@@ -27,16 +27,23 @@ def _validar_senha_forte(senha: str) -> str | None:
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @limiter.limit('10 per minute')
 def login():
-    """Rota de login"""
+    """Rota de login - aceita email ou matrícula"""
     from app import db, Usuario
     from database_config import get_all_units
     from datetime import datetime, timezone
 
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
+        # Aceita email ou matrícula como identificador
+        identificador = request.form.get('email', '').strip()
         senha = request.form.get('senha', '')
 
-        usuario = Usuario.query.filter_by(email=email).first()
+        # Determinar se é email ou matrícula
+        # Se contém @, é email; caso contrário, pode ser matrícula
+        if '@' in identificador:
+            usuario = Usuario.query.filter_by(email=identificador.lower()).first()
+        else:
+            # É matrícula - buscar pelo campo matricula
+            usuario = Usuario.query.filter_by(matricula=identificador).first()
 
         # Verificar bloqueio por brute force
         if usuario and usuario.esta_bloqueado():
@@ -50,6 +57,7 @@ def login():
         if usuario and usuario.ativo and check_password_hash(usuario.senha, senha):
             # Login bem-sucedido — resetar contador de falhas
             usuario.resetar_tentativas()
+            usuario.ultimo_login = datetime.now(timezone.utc)
             db.session.commit()
 
             # Proteção contra session fixation: limpar sessão antiga antes de popular
@@ -62,29 +70,21 @@ def login():
             session['user_tipo'] = usuario.tipo
             session['pode_cadastrar'] = getattr(usuario, 'pode_cadastrar', 1)
 
-            if usuario.permissoes_menu:
-                try:
-                    session['permissoes_menu'] = json.loads(usuario.permissoes_menu)
-                except Exception:
-                    if usuario.tipo == 'admin':
-                        session['permissoes_menu'] = {
-                            'dashboard': True, 'produtos': True, 'movimentacoes': True,
-                            'usuarios': True, 'unidades': True, 'fornecedores': True,
-                            'categorias': True, 'setores': True, 'configuracoes': True,
-                            'relatorios': True, 'backup': True, 'logs': True
-                        }
-                    else:
-                        session['permissoes_menu'] = {}
+            # Define as permissões de menu na sessão
+            if usuario.tipo == 'admin':
+                # Administradores sempre têm todas as permissões.
+                session['permissoes_menu'] = {
+                    'dashboard': True, 'produtos': True, 'movimentacoes': True,
+                    'usuarios': True, 'unidades': True, 'fornecedores': True,
+                    'setores': True, 'configuracoes': True, 'sugestoes': True,
+                    'relatorios': True, 'backup': True, 'logs': True
+                }
             else:
-                if usuario.tipo == 'admin':
-                    session['permissoes_menu'] = {
-                        'dashboard': True, 'produtos': True, 'movimentacoes': True,
-                        'usuarios': True, 'unidades': True, 'fornecedores': True,
-                        'categorias': True, 'setores': True, 'configuracoes': True,
-                        'relatorios': True, 'backup': True, 'logs': True
-                    }
-                else:
-                    session['permissoes_menu'] = {}
+                # Usuários comuns carregam as permissões do banco de dados.
+                try:
+                    session['permissoes_menu'] = json.loads(usuario.permissoes_menu) if usuario.permissoes_menu else {}
+                except json.JSONDecodeError:
+                    session['permissoes_menu'] = {} # Em caso de JSON inválido, não concede permissões.
 
             flash(f'Bem-vindo, {usuario.nome}!', 'success')
             return redirect(url_for('main.selecionar_unidade'))
@@ -93,8 +93,8 @@ def login():
             if usuario:
                 usuario.registrar_tentativa_falha()
                 db.session.commit()
-            # Mensagem genérica — não revela se o email existe ou não
-            flash('Email ou senha incorretos.', 'danger')
+            # Mensagem genérica — não revela se o email/matrícula existe ou não
+            flash('E-mail/matrícula ou senha incorretos.', 'danger')
 
     return render_template('login.html')
 

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil - Sistema de Estoque{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title rounded-circle bg-primary text-white display-4 fw-bold">
+                            {{ (usuario.nome or 'U')[0]|upper }}
+                        </div>
+                    </div>
+                    <h2 class="card-title">Meu Perfil</h2>
+                    <p class="text-muted">Gerencie suas informações pessoais e segurança</p>
+                </div>
+                
+                <form method="POST">
+                    <div class="card mb-4 border-0 bg-light">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-user-circle me-2"></i>Dados Pessoais</h5>
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome Completo</label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="{{ usuario.nome }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-mail</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ usuario.email }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Matrícula</label>
+                                <input type="text" class="form-control" value="{{ usuario.matricula or 'Não informada' }}" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Conta</label>
+                                <div>
+                                    {% if usuario.tipo == 'admin' %}
+                                    <span class="badge bg-danger">👑 Administrador</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">👤 Usuário Padrão</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4 border-0 bg-light">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-lock me-2"></i>Alterar Senha</h5>
+                            <p class="text-muted small mb-3">Preencha apenas se desejar alterar sua senha atual.</p>
+                            
+                            <div class="mb-3">
+                                <label for="senha_atual" class="form-label">Senha Atual</label>
+                                <input type="password" class="form-control" id="senha_atual" name="senha_atual" placeholder="Necessário para confirmar alterações">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="nova_senha" class="form-label">Nova Senha</label>
+                                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" minlength="6">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="confirmar_senha" class="form-label">Confirmar Nova Senha</label>
+                                        <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" minlength="6">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -50,8 +50,13 @@ class DatabaseManager:
         instance_dir = os.path.dirname(self._full_path('instance/placeholder'))
         os.makedirs(instance_dir, exist_ok=True)
 
-        # Conectar ao sqlite (check_same_thread=False para uso em multi-threads leves)
-        conn = sqlite3.connect(self._full_path(db_path), check_same_thread=False)
+        # Conectar ao sqlite com timeout aumentado (30s)
+        conn = sqlite3.connect(self._full_path(db_path), check_same_thread=False, timeout=30.0)
+        
+        # Ativar WAL mode para melhor concorrência
+        conn.execute('PRAGMA journal_mode=WAL')
+        conn.execute('PRAGMA synchronous=NORMAL')
+        
         conn.row_factory = sqlite3.Row  # Permite acesso por nome da coluna
 
         if use_cache:
@@ -76,7 +81,8 @@ class DatabaseManager:
                     unidades_acesso TEXT, -- JSON com unidades que o usuário pode acessar
                     ativo INTEGER DEFAULT 1,
                     pode_cadastrar INTEGER DEFAULT 1,
-                    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
+                    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    ultimo_login DATETIME
                 )
             ''')
             
@@ -186,19 +192,6 @@ class DatabaseManager:
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_fornecedores_cnpj ON fornecedores(cnpj)')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_fornecedores_ativo ON fornecedores(ativo)')
             
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS categorias (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nome TEXT NOT NULL,
-                    descricao TEXT,
-                    ativo INTEGER DEFAULT 1
-                )
-            ''')
-            
-            # Criar índices para melhor performance
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_categorias_nome ON categorias(nome)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_categorias_ativo ON categorias(ativo)')
-        
         conn.commit()
         conn.close()
     

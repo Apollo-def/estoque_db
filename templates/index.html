@@ -19,19 +19,14 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="fas fa-box fa-2x text-primary"></i>
+                    <div class="stat-icon bg-primary">
+                        <i class="fas fa-box"></i>
                     </div>
                     <div>
                         <h6 class="text-muted mb-1">Total de Produtos</h6>
                         <h3 class="mb-0">{{ total_produtos or 0 }}</h3>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <span class="badge bg-primary bg-opacity-10 text-primary">
-                        <i class="fas fa-arrow-up me-1"></i>
-                    </span>
-                </div>
             </div>
         </div>
     </div>
@@ -40,19 +35,14 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                    <div class="stat-icon bg-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <div>
                         <h6 class="text-muted mb-1">Estoque Baixo</h6>
                         <h3 class="mb-0">{{ produtos_baixo_estoque or 0 }}</h3>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <span class="badge bg-warning bg-opacity-10 text-warning">
-                        <i class="fas fa-arrow-down me-1"></i>
-                    </span>
-                </div>
             </div>
         </div>
     </div>
@@ -61,19 +51,14 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="fas fa-arrow-down fa-2x text-success"></i>
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-arrow-down"></i>
                     </div>
                     <div>
                         <h6 class="text-muted mb-1">Entradas</h6>
                         <h3 class="mb-0">{{ total_entradas or 0 }}</h3>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <span class="badge bg-success bg-opacity-10 text-success">
-                        <i class="fas fa-arrow-up me-1"></i>
-                    </span>
-                </div>
             </div>
         </div>
     </div>
@@ -82,29 +67,24 @@
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center">
-                    <div class="bg-danger bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="fas fa-arrow-up fa-2x text-danger"></i>
+                    <div class="stat-icon bg-danger">
+                        <i class="fas fa-arrow-up"></i>
                     </div>
                     <div>
                         <h6 class="text-muted mb-1">Saídas</h6>
                         <h3 class="mb-0">{{ total_saidas or 0 }}</h3>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <span class="badge bg-danger bg-opacity-10 text-danger">
-                        <i class="fas fa-arrow-up me-1"></i>
-                    </span>
-                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Activity -->
-<div class="card">
+<!-- Recent Activity - Premium Style -->
+<div class="card activity-card">
     <div class="card-header">
         <h5 class="card-title mb-0">
-            <i class="fas fa-history me-2 text-primary"></i>Atividade Recente
+            <i class="fas fa-history me-2"></i>Atividade Recente
         </h5>
         <a href="{{ url_for('movimentacoes') }}" class="btn btn-sm btn-outline-primary">
             <i class="fas fa-list me-1"></i>Ver Tudo
@@ -112,63 +92,307 @@
     </div>
     <div class="card-body p-0">
         {% if movimentacoes_recentes %}
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-                <tbody>
-                    {% for mov in movimentacoes_recentes %}
-                    <tr>
-                        <td class="text-center" style="width: 50px;">
-                            <div class="avatar-sm mx-auto">
-                                {% if mov.tipo == 'entrada' %}
-                                <span class="avatar-title bg-success bg-opacity-10 text-success rounded-circle">
-                                    <i class="fas fa-arrow-down"></i>
-                                </span>
-                                {% else %}
-                                <span class="avatar-title bg-danger bg-opacity-10 text-danger rounded-circle">
-                                    <i class="fas fa-arrow-up"></i>
-                                </span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            <h6 class="mb-1">{{ mov.produto_nome }}</h6>
-                            <p class="text-muted mb-0 small">
-                                {{ mov.quantidade }} unidade(s) {{ 'adicionada(s)' if mov.tipo == 'entrada' else 'removida(s)' }}
-                                {% if mov.ordem_servico %}
-                                <br><small><strong>OS:</strong> {{ mov.ordem_servico }}</small>                                {% endif %}
-                            </p>
-                        </td>
-                        <td class="text-end">
-                            {% if mov.data_movimentacao %}
-                                {% if mov.data_movimentacao is string %}
-                                    {% set data = mov.data_movimentacao.split(' ')[0] %}
-                                    {% set hora = mov.data_movimentacao.split(' ')[1] if ' ' in mov.data_movimentacao else '00:00' %}
-                                    <span class="text-muted small">{{ data }}</span>
-                                    <div class="text-muted small">{{ hora }}</div>
-                                {% else %}
-                                    <span class="text-muted small">{{ mov.data_movimentacao.strftime('%d/%m/%Y') }}</span>
-                                    <div class="text-muted small">{{ mov.data_movimentacao.strftime('%H:%M') }}</div>
-                                {% endif %}
-                            {% else %}
-                                <span class="text-muted small">Data não disponível</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="activity-timeline">
+            {% for mov in movimentacoes_recentes %}
+            <div class="activity-item">
+                <div class="activity-icon {% if mov.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
+                    <i class="fas {% if mov.tipo == 'entrada' %}fa-arrow-down{% else %}fa-arrow-up{% endif %}"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-header">
+                        <h6 class="mb-1">{{ mov.produto_nome }}</h6>
+                        <span class="badge {% if mov.tipo == 'entrada' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
+                            {{ 'Entrada' if mov.tipo == 'entrada' else 'Saída' }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0 small">
+                        <span class="quantity-badge {% if mov.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
+                            {{ mov.quantidade }} uni
+                        </span>
+                        {% if mov.ordem_servico %}
+                        <span class="os-badge">
+                            <i class="fas fa-user-tag me-1"></i> {{ mov.ordem_servico }}
+                        </span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="activity-time">
+                    {% if mov.data_movimentacao %}
+                        {% if mov.data_movimentacao is string %}
+                            {% set data = mov.data_movimentacao.split(' ')[0] %}
+                            {% set hora = mov.data_movimentacao.split(' ')[1] if ' ' in mov.data_movimentacao else '00:00' %}
+                            <span class="date">{{ data }}</span>
+                            <span class="time">{{ hora }}</span>
+                        {% else %}
+                            <span class="date">{{ mov.data_movimentacao.strftime('%d/%m/%Y') }}</span>
+                            <span class="time">{{ mov.data_movimentacao.strftime('%H:%M') }}</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% else %}
-        <div class="text-center p-5">
-            <div class="avatar-lg mx-auto mb-3">
-                <div class="avatar-title bg-light text-muted rounded-circle">
-                    <i class="fas fa-inbox fa-2x"></i>
-                </div>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-inbox"></i>
             </div>
             <h5>Nenhuma movimentação recente</h5>
             <p class="text-muted">Não há atividades recentes para exibir no momento.</p>
+            <div class="empty-actions">
+                <a href="{{ url_for('entrada_produto') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus me-1"></i>Primeira Entrada
+                </a>
+                <a href="{{ url_for('saida_produto') }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-minus me-1"></i>Primeira Saída
+                </a>
+            </div>
         </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+/* Premium Activity Timeline Styles */
+.activity-card .card-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+}
+
+.activity-timeline {
+    padding: 10px 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.3s ease;
+    animation: slideInLeft 0.4s ease forwards;
+    opacity: 0;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item:hover {
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.03), transparent);
+}
+
+.activity-item:nth-child(1) { animation-delay: 0.05s; }
+.activity-item:nth-child(2) { animation-delay: 0.1s; }
+.activity-item:nth-child(3) { animation-delay: 0.15s; }
+.activity-item:nth-child(4) { animation-delay: 0.2s; }
+.activity-item:nth-child(5) { animation-delay: 0.25s; }
+
+.activity-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-right: 15px;
+    transition: all 0.3s ease;
+}
+
+.activity-icon.entrada {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #059669;
+}
+
+.activity-icon.saida {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+}
+
+.activity-item:hover .activity-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.activity-header h6 {
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.quantity-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.quantity-badge.entrada {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.quantity-badge.saida {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.os-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fef3c7;
+    color: #d97706;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.activity-time {
+    text-align: right;
+    flex-shrink: 0;
+    margin-left: 15px;
+}
+
+.activity-time .date {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.activity-time .time {
+    display: block;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.empty-icon i {
+    font-size: 2rem;
+    color: #94a3b8;
+}
+
+.empty-state h5 {
+    color: #334155;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Stat Icons */
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 15px;
+}
+
+.stat-icon.bg-primary {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #2563eb;
+}
+
+.stat-icon.bg-warning {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #d97706;
+}
+
+.stat-icon.bg-success {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #059669;
+}
+
+.stat-icon.bg-danger {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+}
+
+/* Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .activity-item {
+        padding: 12px 15px;
+        flex-wrap: wrap;
+    }
+    
+    .activity-icon {
+        width: 38px;
+        height: 38px;
+        margin-right: 12px;
+    }
+    
+    .activity-content {
+        flex: 1 1 calc(100% - 50px);
+    }
+    
+    .activity-time {
+        margin-left: 50px;
+        margin-top: 8px;
+    }
+    
+    .activity-header h6 {
+        font-size: 0.9rem;
+    }
+}
+
+/* Badge overrides */
+.bg-success-subtle {
+    background-color: #d1fae5 !important;
+}
+
+.bg-danger-subtle {
+    background-color: #fee2e2 !important;
+}
+</style>
 {% endblock %}

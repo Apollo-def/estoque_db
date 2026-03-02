@@ -23,31 +23,34 @@ def movimentacoes():
     
     tipo = request.args.get('tipo', '')
     produto_id = request.args.get('produto_id', '')
+    setor = request.args.get('setor', '')
+    
+    # Build query dynamically
+    query = '''
+        SELECT m.*, p.nome as produto_nome
+        FROM movimentacoes m
+        LEFT JOIN produtos p ON m.produto_id = p.id
+        WHERE 1=1
+    '''
+    params = []
     
     if tipo:
-        cursor = unit_db.execute('''
-            SELECT m.*, p.nome as produto_nome, p.categoria
-            FROM movimentacoes m
-            LEFT JOIN produtos p ON m.produto_id = p.id
-            WHERE m.tipo = ?
-        ''', (tipo,))
-        movimentacoes = cursor.fetchall()
-    elif produto_id:
-        cursor = unit_db.execute('''
-            SELECT m.*, p.nome as produto_nome, p.categoria
-            FROM movimentacoes m
-            LEFT JOIN produtos p ON m.produto_id = p.id
-            WHERE m.produto_id = ?
-        ''', (produto_id,))
-        movimentacoes = cursor.fetchall()
-    else:
-        cursor = unit_db.execute('''
-            SELECT m.*, p.nome as produto_nome, p.categoria
-            FROM movimentacoes m
-            LEFT JOIN produtos p ON m.produto_id = p.id
-            ORDER BY m.data_movimentacao DESC
-        ''')
-        movimentacoes = cursor.fetchall()
+        query += ' AND m.tipo = ?'
+        params.append(tipo)
+    
+    if produto_id:
+        query += ' AND m.produto_id = ?'
+        params.append(produto_id)
+    
+    if setor:
+        query += ' AND (m.origem LIKE ? OR m.destino LIKE ?)'
+        params.append(f'%{setor}%')
+        params.append(f'%{setor}%')
+    
+    query += ' ORDER BY m.data_movimentacao DESC'
+    
+    cursor = unit_db.execute(query, params)
+    movimentacoes = cursor.fetchall()
     
     movimentacoes_com_info = []
     for mov in movimentacoes:
@@ -70,12 +73,22 @@ def movimentacoes():
     cursor = unit_db.execute('SELECT id, nome, quantidade FROM produtos WHERE ativo = 1 ORDER BY nome')
     produtos = cursor.fetchall()
     
+    # Get unique setores from movimentacoes (origem and destino)
+    cursor = unit_db.execute('''
+        SELECT DISTINCT COALESCE(origem, destino) as nome 
+        FROM movimentacoes 
+        WHERE origem IS NOT NULL OR destino IS NOT NULL
+        ORDER BY nome
+    ''')
+    setores = [row['nome'] for row in cursor.fetchall()]
+    
     cursor = unit_db.execute('SELECT SUM(quantidade) as total FROM produtos WHERE ativo = 1')
     saldo_geral = cursor.fetchone()[0] or 0
     
     return render_template('movimentacoes.html', 
                          movimentacoes=movimentacoes_com_info, 
                          produtos=produtos,
+                         setores=setores,
                          saldo_geral=saldo_geral)
 
 
@@ -148,7 +161,8 @@ def saida_produto():
         produto_id = request.form['produto_id']
         quantidade = int(request.form['quantidade'])
         destino = request.form.get('destino', '')
-        ordem_servico = request.form.get('ordem_servico', '')
+        # Reutilizamos a coluna ordem_servico para salvar o nome do responsável
+        ordem_servico = request.form.get('responsavel_retirada', '')
         motivo = request.form.get('motivo', '')
         
         cursor = unit_db.execute('SELECT * FROM produtos WHERE id = ? AND ativo = 1', (produto_id,))
@@ -156,13 +170,15 @@ def saida_produto():
         
         if not produto:
             flash('Produto não encontrado!', 'danger')
-            produtos = unit_db.execute('SELECT id, nome FROM produtos WHERE ativo = 1 ORDER BY nome').fetchall()
-            return render_template('saida_produto.html', produtos=produtos)
+            produtos = unit_db.execute('SELECT id, nome, quantidade FROM produtos WHERE ativo = 1 ORDER BY nome').fetchall()
+            setores = unit_db.execute('SELECT id, nome FROM setores WHERE ativo = 1 ORDER BY nome').fetchall()
+            return render_template('saida_produto.html', produtos=produtos, setores=setores)
         
         if produto['quantidade'] < quantidade:
             flash(f'Estoque insuficiente! Produto tem apenas {produto["quantidade"]} unidades.', 'danger')
-            produtos = unit_db.execute('SELECT id, nome FROM produtos WHERE ativo = 1 ORDER BY nome').fetchall()
-            return render_template('saida_produto.html', produtos=produtos)
+            produtos = unit_db.execute('SELECT id, nome, quantidade FROM produtos WHERE ativo = 1 ORDER BY nome').fetchall()
+            setores = unit_db.execute('SELECT id, nome FROM setores WHERE ativo = 1 ORDER BY nome').fetchall()
+            return render_template('saida_produto.html', produtos=produtos, setores=setores)
         
         try:
             cursor = unit_db.execute('UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?', (quantidade, produto_id))
@@ -179,8 +195,9 @@ def saida_produto():
             unit_db.rollback()
             flash('Erro ao registrar saída!', 'danger')
     
-    produtos = unit_db.execute('SELECT id, nome FROM produtos WHERE ativo = 1 ORDER BY nome').fetchall()
-    return render_template('saida_produto.html', produtos=produtos)
+    produtos = unit_db.execute('SELECT id, nome, quantidade FROM produtos WHERE ativo = 1 ORDER BY nome').fetchall()
+    setores = unit_db.execute('SELECT id, nome FROM setores WHERE ativo = 1 ORDER BY nome').fetchall()
+    return render_template('saida_produto.html', produtos=produtos, setores=setores)
 
 
 @movements_bp.route('/excluir/<int:id>')

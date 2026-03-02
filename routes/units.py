@@ -12,23 +12,23 @@ units_bp = Blueprint('units', __name__, url_prefix='/unidades')
 @units_bp.route('')
 def listar_unidades():
     """Lista todas as unidades"""
+    from flask import current_app
     from app import db, Usuario, Unidade
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
     
-    if session.get('user_tipo') == 'admin':
-        unidades = Unidade.query.order_by(Unidade.id).all()
+    from sqlalchemy import cast, Integer
+    try:
+        unidades = Unidade.query.order_by(cast(Unidade.id, Integer)).all()
+        current_app.logger.info(f"Unidades encontradas: {len(unidades)}")
+        for u in unidades:
+            current_app.logger.info(f"  - ID: {u.id}, Nome: {u.nome}")
         return render_template('listar_unidades.html', unidades=unidades)
-    
-    user_permissoes = session.get('permissoes_menu', {})
-    
-    if not user_permissoes.get('unidades', False):
-        flash('Você não tem permissão para acessar esta página.', 'danger')
-        return redirect(url_for('main.index'))
-    
-    unidades = Unidade.query.order_by(Unidade.id).all()
-    return render_template('listar_unidades.html', unidades=unidades)
+    except Exception as e:
+        current_app.logger.error(f"Erro ao buscar unidades: {e}")
+        flash('Erro ao carregar unidades', 'danger')
+        return render_template('listar_unidades.html', unidades=[])
 
 
 @units_bp.route('/novo', methods=['GET', 'POST'])
@@ -94,7 +94,12 @@ def novo_unidade():
         try:
             db_manager.init_database(unit_id)
             flash('Unidade criada com sucesso e banco inicializado.', 'success')
-            return redirect(url_for('users.tabela'))
+            
+            # Admin automaticamente tem acesso a qualquer unidade
+            # Selecionar a unidade automaticamente e redirecionar para o dashboard
+            session['unit_id'] = unit_id
+            session['unit_name'] = nome
+            return redirect(url_for('main.index'))
         except Exception as e:
             flash('Unidade criada no central, mas falha ao inicializar o banco.', 'warning')
             return redirect(url_for('users.tabela'))

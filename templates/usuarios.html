@@ -6,45 +6,69 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>👥 Gestão de Usuários</h2>
-            <a href="{{ url_for('novo_usuario') }}" class="btn btn-success">➕ Novo Usuário</a>
+            <h2 class="m-0"><i class="fas fa-users-cog me-2"></i>Gestão de Usuários</h2>
+            <a href="{{ url_for('novo_usuario') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Novo Usuário</a>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card card-body dashboard-card">
+                    <h6 class="card-title text-muted fw-semibold">Total de Usuários</h6>
+                    <h2 class="text-primary">{{ usuarios|length }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-body dashboard-card">
+                    <h6 class="card-title text-muted fw-semibold">Administradores</h6>
+                    <h2 class="text-danger">{{ (usuarios|selectattr('tipo', 'equalto', 'admin')|list)|length }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-body dashboard-card">
+                    <h6 class="card-title text-muted fw-semibold">Usuários Ativos</h6>
+                    <h2 class="text-success">{{ (usuarios|selectattr('ativo')|list)|length }}</h2>
+                </div>
+            </div>
         </div>
 
         <div class="card">
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if usuarios %}
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Email</th>
+                                <th>Usuário</th>
+                                <th>Matrícula</th>
                                 <th>Tipo</th>
-                                <th>Permissão</th>
                                 <th>Status</th>
-                                <th>Data de Criação</th>
-                                <th>Ações</th>
+                                <th>Último Acesso</th>
+                                <th class="text-end">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for usuario in usuarios %}
                             <tr>
-                                <td>{{ usuario.id }}</td>
-                                <td>{{ usuario.nome }}</td>
-                                <td>{{ usuario.email }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <div class="avatar-title rounded-circle bg-primary bg-opacity-10 text-primary fw-semibold">
+                                                {{ (usuario.nome or 'U')[0]|upper }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">{{ usuario.nome }}</h6>
+                                            <small class="text-muted">{{ usuario.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ usuario.matricula or '-' }}</td>
                                 <td>
                                     {% if usuario.tipo == 'admin' %}
                                     <span class="badge bg-danger">👑 Administrador</span>
                                     {% else %}
                                     <span class="badge bg-primary">👤 Usuário</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if usuario.pode_cadastrar %}
-                                    <span class="badge bg-success">✅ Pode Cadastrar</span>
-                                    {% else %}
-                                    <span class="badge bg-warning">👁 Apenas Visualização</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -54,14 +78,31 @@
                                     <span class="badge bg-danger">❌ Inativo</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ usuario.data_criacao.strftime('%d/%m/%Y %H:%M') }}</td>
                                 <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ url_for('editar', id=usuario.id) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                                        <a href="{{ url_for('redefinir_senha', id=usuario.id) }}" class="btn btn-sm btn-info">🔑 Redefinir Senha</a>
-                                        <a href="{{ url_for('excluir', id=usuario.id) }}" 
-                                           class="btn btn-sm btn-danger" 
-                                           onclick="return confirm('Tem certeza que deseja excluir este usuário?')">🗑️ Excluir</a>
+                                    {% if usuario.ultimo_login %}
+                                        {{ usuario.ultimo_login.strftime('%d/%m/%Y') }}<br>
+                                        <small class="text-muted">{{ usuario.ultimo_login.strftime('%H:%M') }}</small>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Ações
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="{{ url_for('editar', id=usuario.id) }}"><i class="fas fa-edit me-2"></i>Editar</a></li>
+                                            <li><a class="dropdown-item" href="{{ url_for('redefinir_senha', id=usuario.id) }}"><i class="fas fa-key me-2"></i>Redefinir Senha</a></li>
+                                            {% if usuario.id != session.user_id %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="{{ url_for('excluir', id=usuario.id) }}" onclick="return confirm('Tem certeza que deseja excluir este usuário?')">
+                                                    <i class="fas fa-trash me-2"></i>Excluir
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
                                     </div>
                                 </td>
                             </tr>
@@ -71,9 +112,9 @@
                 </div>
                 {% else %}
                 <div class="alert alert-info text-center">
-                    <h4>👥 Nenhum usuário encontrado</h4>
-                    <p>Comece cadastrando seu primeiro usuário!</p>
-                    <a href="{{ url_for('novo_usuario') }}" class="btn btn-primary">Cadastrar Usuário</a>
+                    <h4 class="mb-3">👥 Nenhum usuário encontrado</h4>
+                    <p>Comece cadastrando o primeiro usuário do sistema.</p>
+                    <a href="{{ url_for('novo_usuario') }}" class="btn btn-primary mt-2"><i class="fas fa-plus me-1"></i> Cadastrar Usuário</a>
                 </div>
                 {% endif %}
             </div>

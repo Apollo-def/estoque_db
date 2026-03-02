@@ -1,6 +1,6 @@
 # Rotas de Gerenciamento de Usuários
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from routes.helpers import admin_required
 
@@ -33,12 +33,14 @@ def editar(id):
         {'id': 'dashboard', 'nome': 'Dashboard', 'icone': 'fas fa-tachometer-alt'},
         {'id': 'produtos', 'nome': 'Produtos', 'icone': 'fas fa-boxes'},
         {'id': 'movimentacoes', 'nome': 'Movimentações', 'icone': 'fas fa-exchange-alt'},
-        {'id': 'categorias', 'nome': 'Categorias', 'icone': 'fas fa-tags'},
         {'id': 'setores', 'nome': 'Setores', 'icone': 'fas fa-building'},
         {'id': 'fornecedores', 'nome': 'Fornecedores', 'icone': 'fas fa-truck'},
         {'id': 'unidades', 'nome': 'Unidades', 'icone': 'fas fa-hospital-alt'},
-        {'id': 'usuarios', 'nome': 'Usuários', 'icone': 'fas fa-users', 'admin_only': True},
-        {'id': 'configuracoes', 'nome': 'Configurações', 'icone': 'fas fa-cog'}
+        {'id': 'usuarios', 'nome': 'Gestão de Usuários', 'icone': 'fas fa-users', 'admin_only': True},
+        {'id': 'sugestoes', 'nome': 'Analisar Sugestões', 'icone': 'fas fa-tasks', 'admin_only': True},
+        {'id': 'relatorios', 'nome': 'Relatórios', 'icone': 'fas fa-chart-line', 'admin_only': True},
+        {'id': 'configuracoes', 'nome': 'Configurações', 'icone': 'fas fa-cog'},
+        {'id': 'backup', 'nome': 'Backup', 'icone': 'fas fa-database', 'admin_only': True}
     ]
 
     usuario = Usuario.query.get_or_404(id)
@@ -53,6 +55,7 @@ def editar(id):
         nome = request.form['nome']
         email = request.form['email']
         nova_senha = request.form.get('nova_senha')
+        matricula = request.form.get('matricula', '').strip()
 
         usuario_existente = Usuario.query.filter(Usuario.email == email, Usuario.id != id).first()
         if usuario_existente:
@@ -65,6 +68,7 @@ def editar(id):
 
         usuario.nome = nome
         usuario.email = email
+        usuario.matricula = matricula if matricula else None
 
         if nova_senha:
             usuario.senha = generate_password_hash(nova_senha)
@@ -109,23 +113,6 @@ def editar(id):
     if session.get('user_tipo') == 'admin':
         unidades = get_all_units()
 
-    # Garantir colunas necessárias
-    try:
-        conn = db_manager.get_connection(None)
-        cur = conn.cursor()
-        cur.execute("PRAGMA table_info(usuarios)")
-        cols = [r['name'] for r in cur.fetchall()]
-        
-        if 'pode_cadastrar' not in cols:
-            cur.execute("ALTER TABLE usuarios ADD COLUMN pode_cadastrar INTEGER DEFAULT 1")
-        
-        if 'permissoes_menu' not in cols:
-            cur.execute("ALTER TABLE usuarios ADD COLUMN permissoes_menu TEXT")
-        
-        conn.commit()
-    except Exception as e:
-        pass
-    
     return render_template('editar.html', 
                          usuario=usuario, 
                          unidades=unidades,
@@ -146,6 +133,7 @@ def novo_usuario():
     if request.method == 'POST':
         nome = request.form['nome']
         email = request.form['email']
+        matricula = request.form.get('matricula', '').strip()
         senha = request.form['senha']
         tipo = request.form.get('tipo', 'user')
         unidades = request.form.getlist('unidades')
@@ -171,14 +159,14 @@ def novo_usuario():
         if tipo == 'admin':
             permissoes_menu = {
                 'dashboard': True, 'produtos': True, 'movimentacoes': True,
-                'categorias': True, 'setores': True, 'fornecedores': True,
+                'setores': True, 'fornecedores': True,
                 'usuarios': True, 'unidades': True, 'configuracoes': True,
-                'relatorios': True, 'backup': True, 'logs': True
+                'relatorios': True, 'backup': True, 'logs': True, 'sugestoes': True
             }
         else:
             permissoes_menu = {
                 'dashboard': False, 'produtos': False, 'movimentacoes': False,
-                'categorias': False, 'setores': False, 'fornecedores': False,
+                'setores': False, 'fornecedores': False,
                 'usuarios': False, 'unidades': False, 'configuracoes': False,
                 'relatorios': False, 'backup': False, 'logs': False
             }
@@ -186,6 +174,7 @@ def novo_usuario():
         novo_usuario = Usuario(
             nome=nome, 
             email=email, 
+            matricula=matricula if matricula else None,
             senha=senha_hash, 
             tipo=tipo, 
             unidades_acesso=unidades_acesso, 
@@ -272,3 +261,61 @@ def redefinir_senha(id):
             flash('Erro ao redefinir a senha.', 'danger')
 
     return render_template('redefinir_senha.html', usuario=usuario)
+
+
+@users_bp.route('/perfil', methods=['GET', 'POST'])
+def perfil():
+    """Perfil do usuário logado (edição de dados próprios)"""
+    from app import db, Usuario
+    
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+        
+    usuario = db.session.get(Usuario, session['user_id'])
+    if not usuario:
+        session.clear()
+        return redirect(url_for('auth.login'))
+    
+    if request.method == 'POST':
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        senha_atual = request.form.get('senha_atual')
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
+        
+        # Validações básicas
+        if not nome or not email:
+            flash('Nome e Email são obrigatórios.', 'danger')
+            return render_template('perfil.html', usuario=usuario)
+            
+        # Verificar se email já existe (se mudou)
+        if email != usuario.email:
+            existente = Usuario.query.filter(Usuario.email == email, Usuario.id != usuario.id).first()
+            if existente:
+                flash('Este email já está em uso por outro usuário.', 'danger')
+                return render_template('perfil.html', usuario=usuario)
+        
+        # Alteração de senha
+        if nova_senha:
+            if not senha_atual or not check_password_hash(usuario.senha, senha_atual):
+                flash('Senha atual incorreta. Necessária para definir uma nova senha.', 'danger')
+                return render_template('perfil.html', usuario=usuario)
+                
+            if len(nova_senha) < 6:
+                flash('A nova senha deve ter no mínimo 6 caracteres.', 'danger')
+                return render_template('perfil.html', usuario=usuario)
+                
+            if nova_senha != confirmar_senha:
+                flash('A confirmação da nova senha não confere.', 'danger')
+                return render_template('perfil.html', usuario=usuario)
+                
+            usuario.senha = generate_password_hash(nova_senha)
+            flash('Senha alterada com sucesso!', 'success')
+            
+        usuario.nome = nome
+        usuario.email = email
+        db.session.commit()
+        session['user_nome'] = usuario.nome # Atualiza nome na sessão
+        flash('Perfil atualizado com sucesso!', 'success')
+            
+    return render_template('perfil.html', usuario=usuario)

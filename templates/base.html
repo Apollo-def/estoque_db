@@ -62,20 +62,7 @@
                 </a>
                 {% endif %}
                 
-                {% if (user_permissoes.get('movimentacoes', true) or session.user_tipo == 'admin') and (session.user_tipo == 'admin' or session.get('pode_cadastrar', 1)) %}
-                <a href="{{ url_for('entrada_produto') }}" class="menu-item {% if request.endpoint == 'entrada_produto' %}active{% endif %}">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Entrada</span>
-                </a>
-                
-                <a href="{{ url_for('saida_produto') }}" class="menu-item {% if request.endpoint == 'saida_produto' %}active{% endif %}">
-                    <i class="fas fa-minus-circle"></i>
-                    <span>Saída</span>
-                </a>
-                {% endif %}
-                
 
-                
                 <!-- Menu Relatórios -->
                 {% if user_permissoes.get('movimentacoes', true) or session.user_tipo == 'admin' %}
                 <div class="menu-category">Relatórios</div>
@@ -91,8 +78,8 @@
                 {% if user_permissoes.get('usuarios', false) or 
                       user_permissoes.get('unidades', false) or
                       user_permissoes.get('fornecedores', false) or 
-                      user_permissoes.get('categorias', false) or 
                       user_permissoes.get('setores', false) or
+                      user_permissoes.get('sugestoes', false) or
                       user_permissoes.get('configuracoes', false) or
                       user_permissoes.get('relatorios', false) or
                       user_permissoes.get('backup', false) or
@@ -101,7 +88,7 @@
                 {% endif %}
                 
                 {% if show_admin_menu %}
-                <div class="menu-category">Administração</div>
+                <div class="menu-category">Administrativo</div>
                 
                 <!-- Submenu Gestão -->
                 {% if user_permissoes.get('usuarios', false) %}
@@ -118,12 +105,18 @@
                             <span>Usuários</span>
                         </a>
                         {% endif %}
+                        {% if user_permissoes.get('sugestoes', false) %}
+                        <a href="{{ url_for('suggestions.admin_sugestoes') }}" class="menu-item submenu-item {% if request.endpoint == 'suggestions.admin_sugestoes' %}active{% endif %}">
+                            <i class="fas fa-tasks"></i>
+                            <span>Analisar Sugestões</span>
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
                 
                 <!-- Submenu Cadastros -->
-                {% if user_permissoes.get('unidades', false) or user_permissoes.get('fornecedores', false) or user_permissoes.get('categorias', false) or user_permissoes.get('setores', false) or session.user_tipo == 'admin' %}
+                {% if user_permissoes.get('unidades', false) or user_permissoes.get('fornecedores', false) or user_permissoes.get('setores', false) or session.user_tipo == 'admin' %}
                 <div class="submenu-wrapper">
                     <a href="#" class="menu-item submenu-toggle" data-submenu="cadastros">
                         <i class="fas fa-clipboard-list"></i>
@@ -141,12 +134,6 @@
                         <a href="{{ url_for('fornecedores') }}" class="menu-item submenu-item {% if request.endpoint == 'fornecedores' %}active{% endif %}">
                             <i class="fas fa-truck-loading"></i>
                             <span>Fornecedores</span>
-                        </a>
-                        {% endif %}
-                        {% if user_permissoes.get('categorias', false) %}
-                        <a href="{{ url_for('categorias') }}" class="menu-item submenu-item {% if request.endpoint == 'categorias' %}active{% endif %}">
-                            <i class="fas fa-tags"></i>
-                            <span>Categorias</span>
                         </a>
                         {% endif %}
                         {% if user_permissoes.get('setores', false) %}
@@ -168,17 +155,9 @@
                         <i class="fas fa-chevron-down submenu-arrow ms-auto"></i>
                     </a>
                     <div class="submenu" id="submenu-relatorios-admin">
-                        <a href="#" class="menu-item submenu-item">
+                        <a href="{{ url_for('reports.relatorio_geral') }}" class="menu-item submenu-item {% if request.endpoint == 'reports.relatorio_geral' %}active{% endif %}">
                             <i class="fas fa-file-alt"></i>
                             <span>Relatório Geral</span>
-                        </a>
-                        <a href="#" class="menu-item submenu-item">
-                            <i class="fas fa-chart-pie"></i>
-                            <span>Análise de Estoque</span>
-                        </a>
-                        <a href="#" class="menu-item submenu-item">
-                            <i class="fas fa-calculator"></i>
-                            <span>Relatório Financeiro</span>
                         </a>
                     </div>
                 </div>
@@ -206,15 +185,9 @@
                         </a>
                         {% endif %}
                         {% if user_permissoes.get('logs', false) %}
-                        <a href="#" class="menu-item submenu-item">
-                            <i class="fas fa-history"></i>
-                            <span>Logs do Sistema</span>
-                        </a>
+ 
                         {% endif %}
-                        <a href="#" class="menu-item submenu-item">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Segurança</span>
-                        </a>
+               
                     </div>
                 </div>
                 {% endif %}
@@ -224,9 +197,13 @@
                 
                 <!-- Menu Conta -->
                 <div class="menu-category">Conta</div>
-                <a href="#" class="menu-item">
+                <a href="{{ url_for('users.perfil') }}" class="menu-item {% if request.endpoint == 'users.perfil' %}active{% endif %}">
                     <i class="fas fa-user"></i>
                     <span>Meu Perfil</span>
+                </a>
+                <a href="{{ url_for('suggestions.minhas_sugestoes') }}" class="menu-item {% if request.endpoint == 'suggestions.minhas_sugestoes' or request.endpoint == 'suggestions.nova_sugestao' %}active{% endif %}">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Caixa de Sugestões</span>
                 </a>
                 <a href="{{ url_for('logout') }}" class="menu-item">
                     <i class="fas fa-sign-out-alt"></i>
@@ -251,10 +228,74 @@
                 </div>
                 
                 <div class="header-actions">
-                    <button class="notification-btn" id="notificationBtn">
-                        <i class="far fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </button>
+                    <!-- Seletor de Unidade no Header -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="unitDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-hospital-alt me-1"></i>
+                            <span class="d-none d-md-inline">{{ session.get('unit_name', 'Selecionar') }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="unitDropdown" style="max-height: 300px; overflow-y: auto;">
+                            {% if session.user_tipo == 'admin' %}
+                            {% set unidades = get_all_units() %}
+                            {% if unidades %}
+                                {% for unit_id, unit_config in unidades.items() %}
+                                <li>
+                                    <a class="dropdown-item {% if session.get('unit_id') == unit_id %}active{% endif %}" 
+                                       href="{{ url_for('main.trocar_unidade') }}?proxima={{ unit_id }}">
+                                        <i class="fas fa-building me-2"></i>{{ unit_config.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li><span class="dropdown-item-text text-muted">Nenhuma unidade</span></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-primary" href="{{ url_for('units.novo_unidade') }}">
+                                    <i class="fas fa-plus me-2"></i>Nova Unidade
+                                </a>
+                            </li>
+                            {% else %}
+                            <li><span class="dropdown-item-text text-muted">Sem acesso</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="dropdown">
+                        <button class="notification-btn" id="notificationBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="far fa-bell"></i>
+                            {% if unread_notifications > 0 %}
+                            <span class="notification-badge">{{ unread_notifications }}</span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationBtn">
+                            <li class="dropdown-header">
+                                <h6>Notificações</h6>
+                                {% if unread_notifications > 0 %}
+                                <a href="{{ url_for('system.mark_all_notifications_as_read') }}">Marcar todas como lidas</a>
+                                {% endif %}
+                            </li>
+                            <li><hr class="dropdown-divider m-0"></li>
+                            
+                            <div class="notification-list">
+                            {% if notifications %}
+                                {% for notification in notifications %}
+                                <li>
+                                    <a class="dropdown-item notification-item {% if not notification.lida %}unread{% endif %}" href="{{ url_for('system.read_notification', id=notification.id) }}">
+                                        <div class="notification-icon"><i class="fas fa-lightbulb text-warning"></i></div>
+                                        <div class="notification-content">
+                                            <p class="mb-0">{{ notification.mensagem }}</p>
+                                            <small class="text-muted">{{ notification.data_criacao.strftime('%d/%m/%Y %H:%M') }}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                            <li class="text-center p-3 text-muted small">Nenhuma notificação.</li>
+                            {% endif %}
+                            </div>
+                        </ul>
+                    </div>
                     
                     <div class="dropdown">
                         <button class="user-btn" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -263,7 +304,7 @@
                             </div>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Meu Perfil</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.perfil') }}"><i class="fas fa-user me-2"></i>Meu Perfil</a></li>
                             <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configurações</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
@@ -425,34 +466,10 @@
             };
             
             window.performBackup = function() {
-                const backupType = document.querySelector('input[name="backupType"]:checked').value;
-                
-                // Show loading state
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Gerando Backup...';
-                button.disabled = true;
-                
-                // Simulate backup process
-                setTimeout(() => {
-                    closeBackupModal();
-                    
-                    // Show success message
-                    const alertHtml = `
-                        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center position-fixed top-0 start-50 translate-middle-x mt-3" role="alert" style="z-index: 9999;">
-                            <i class="fas fa-check-circle me-2"></i>
-                            Backup realizado com sucesso! Arquivo salvo em downloads/
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    `;
-                    document.body.insertAdjacentHTML('beforeend', alertHtml);
-                    
-                    // Auto-remove alert after 5 seconds
-                    setTimeout(() => {
-                        const alert = document.querySelector('.alert-success');
-                        if (alert) alert.remove();
-                    }, 5000);
-                }, 2000);
+                // Fecha o modal
+                closeBackupModal();
+                // Redireciona para a rota de backup, que iniciará o download do arquivo .zip
+                window.location.href = "{{ url_for('system.create_backup') }}";
             };
             
             // Close modal when clicking outside

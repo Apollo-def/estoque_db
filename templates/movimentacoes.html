@@ -3,47 +3,143 @@
 {% block title %}Movimentações - Sistema de Estoque{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="page-title">
+    <h1 class="m-0">
+        <i class="fas fa-exchange-alt me-2 text-primary"></i>Histórico de Movimentações
+    </h1>
+</div>
+
+<!-- Action Buttons -->
+{% if session.user_tipo == 'admin' or session.pode_cadastrar %}
+<div class="row mb-4">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>📋 Histórico de Movimentações</h2>
-            {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
-            <div class="btn-group" role="group">
-                <a href="{{ url_for('entrada_produto') }}" class="btn btn-success">📥 Registrar Entrada</a>
-                <a href="{{ url_for('saida_produto') }}" class="btn btn-warning">📤 Registrar Saída</a>
-            </div>
-            {% endif %}
+        <div class="action-buttons">
+            <a href="{{ url_for('entrada_produto') }}" class="btn btn-success">
+                <i class="fas fa-arrow-down me-2"></i>Registrar Entrada
+            </a>
+            <a href="{{ url_for('saida_produto') }}" class="btn btn-warning">
+                <i class="fas fa-arrow-up me-2"></i>Registrar Saída
+            </a>
         </div>
+    </div>
+</div>
+{% endif %}
 
-        <!-- Filtros -->
-        <div class="card mb-4">
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
             <div class="card-body">
-                <form method="GET" class="row g-3">
-                    <div class="col-md-4">
-                        <select class="form-select" name="tipo">
-                            <option value="">Todas movimentações</option>
-                            <option value="entrada" {% if request.args.get('tipo') == 'entrada' %}selected{% endif %}>📥 Entradas</option>
-                            <option value="saida" {% if request.args.get('tipo') == 'saida' %}selected{% endif %}>📤 Saídas</option>
-                        </select>
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-primary">
+                        <i class="fas fa-list"></i>
                     </div>
-                    <div class="col-md-4">
-                        <select class="form-select" name="produto_id">
-                            <option value="">Todos produtos</option>
-                            {% for produto in produtos %}
-                            <option value="{{ produto.id }}" {% if request.args.get('produto_id') == produto.id|string %}selected{% endif %}>{{ produto.nome }}</option>
-                            {% endfor %}
-                        </select>
+                    <div>
+                        <h6 class="text-muted mb-1">Total Movimentações</h6>
+                        <h3 class="mb-0">{{ movimentacoes|length }}</h3>
                     </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-primary w-100">🔍 Filtrar</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Entradas</h6>
+                        <h3 class="mb-0">{{ movimentacoes|selectattr('tipo', 'equalto', 'entrada')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-warning">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Saídas</h6>
+                        <h3 class="mb-0">{{ movimentacoes|selectattr('tipo', 'equalto', 'saida')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Saldo Geral</h6>
+                        <h3 class="mb-0">{{ saldo_geral or 0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        {% if movimentacoes %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Tipo de Movimentação</label>
+                <select class="form-select" name="tipo">
+                    <option value="">Todas movimentações</option>
+                    <option value="entrada" {% if request.args.get('tipo') == 'entrada' %}selected{% endif %}>📥 Entradas</option>
+                    <option value="saida" {% if request.args.get('tipo') == 'saida' %}selected{% endif %}>📤 Saídas</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Produto</label>
+                <select class="form-select" name="produto_id">
+                    <option value="">Todos produtos</option>
+                    {% for produto in produtos %}
+                    <option value="{{ produto.id }}" {% if request.args.get('produto_id') == produto.id|string %}selected{% endif %}>{{ produto.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Setor</label>
+                <select class="form-select" name="setor">
+                    <option value="">Todos setores</option>
+                    {% for setor in setores %}
+                    <option value="{{ setor }}" {% if request.args.get('setor') == setor %}selected{% endif %}>{{ setor }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Movements Table -->
+{% if movimentacoes %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-history me-2"></i>Registros
+        </h5>
+        <span class="badge bg-primary">{{ movimentacoes|length }} registros</span>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>Data/Hora</th>
@@ -51,8 +147,8 @@
                         <th>Produto</th>
                         <th>Quantidade</th>
                         <th>Responsável</th>
-                        <th>Origem/Destino</th>
-                        <th>Documento</th>
+                        <th>setor/Destino</th>
+                        <th>Info. Adicional</th>
                         {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
                         <th>Ações</th>
                         {% endif %}
@@ -60,53 +156,60 @@
                 </thead>
                 <tbody>
                     {% for mov in movimentacoes %}
-                    <tr>
+                    <tr class="movement-row">
                         <td>
-                            {% if mov.data_movimentacao %}
-                                {% if mov.data_movimentacao is string %}
-                                    {% set data = mov.data_movimentacao.split(' ')[0] %}
-                                    {% set hora = mov.data_movimentacao.split(' ')[1] if ' ' in mov.data_movimentacao else '00:00' %}
-                                    {{ data }} {{ hora }}
-                                {% else %}
-                                    {{ mov.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">{{ mov.data_movimentacao.strftime('%d/%m/%Y') if mov.data_movimentacao and not mov.data_movimentacao is string else mov.data_movimentacao.split(' ')[0] if mov.data_movimentacao is string else 'N/A' }}</span>
+                                <small class="text-muted">{{ mov.data_movimentacao.strftime('%H:%M') if mov.data_movimentacao and not mov.data_movimentacao is string else mov.data_movimentacao.split(' ')[1] if mov.data_movimentacao is string and ' ' in mov.data_movimentacao else '' }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="movement-badge {% if mov.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
+                                <i class="fas {% if mov.tipo == 'entrada' %}fa-arrow-down{% else %}fa-arrow-up{% endif %} me-1"></i>
+                                {{ 'Entrada' if mov.tipo == 'entrada' else 'Saída' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="product-info">
+                                <strong>{{ mov.produto_nome or 'Produto não encontrado' }}</strong>
+                                {% if mov.categoria %}
+                                <small class="text-muted d-block">{{ mov.categoria }}</small>
                                 {% endif %}
-                            {% else %}
-                                Data não disponível
-                            {% endif %}
+                            </div>
                         </td>
                         <td>
-                            {% if mov.tipo == 'entrada' %}
-                            <span class="badge bg-success">📥 ENTRADA</span>
-                            {% else %}
-                            <span class="badge bg-warning">📤 SAÍDA</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <strong>{{ mov.produto_nome or 'Produto não encontrado' }}</strong>
-                            {% if mov.categoria %}
-                            <br><small class="text-muted">{{ mov.categoria }}</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge {% if mov.tipo == 'entrada' %}bg-success{% else %}bg-danger{% endif %}">
+                            <span class="quantity-pill {% if mov.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
                                 {% if mov.tipo == 'entrada' %}+{% else %}-{% endif %}{{ mov.quantidade }}
                             </span>
                         </td>
-                        <td>{{ mov.usuario_responsavel.nome if mov.usuario_responsavel else 'Não informado' }}</td>
                         <td>
-                            {% if mov.origem %}
-                            <span class="text-success">📥 {{ mov.origem }}</span>
+                            <div class="user-info">
+                                <i class="fas fa-user-circle me-1 text-muted"></i>
+                                {{ mov.usuario_responsavel.nome if mov.usuario_responsavel else 'Não informado' }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if mov.setor %}
+                            <span class="origin-badge">
+                                <i class="fas fa-arrow-from-arc-right me-1"></i>{{ mov.setor }}
+                            </span>
                             {% elif mov.destino %}
-                            <span class="text-warning">📤 {{ mov.destino }}</span>
+                            <span class="destiny-badge">
+                                <i class="fas fa-arrow-to-arc me-1"></i>{{ mov.destino }}
+                            </span>
                             {% else %}
                             <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if mov.nota_fiscal %}
-                            <small>NF: {{ mov.nota_fiscal }}</small>
+                            <span class="doc-badge">
+                                <i class="fas fa-file-invoice me-1"></i>NF: {{ mov.nota_fiscal }}
+                            </span>
                             {% elif mov.ordem_servico %}
-                            <small>OS: {{ mov.ordem_servico }}</small>
+                            <span class="doc-badge os">
+                                <i class="fas fa-user-tag me-1"></i>Retirado por: {{ mov.ordem_servico }}
+                            </span>
                             {% else %}
                             <span class="text-muted">-</span>
                             {% endif %}
@@ -114,19 +217,21 @@
                         {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
                         <td>
                             <a href="{{ url_for('excluir_movimentacao', id=mov.id) }}" 
-                               class="btn btn-sm btn-danger" 
-                               onclick="return confirm('Tem certeza que deseja excluir esta movimentação?\n\nIsso irá reverter o estoque!')">
-                                🗑️
+                               class="btn btn-sm btn-danger btn-delete" 
+                               onclick="return confirm('Tem certeza que deseja excluir esta movimentação?\n\nIsso irá reverter o estoque!')"
+                               title="Excluir">
+                                <i class="fas fa-trash"></i>
                             </a>
                         </td>
                         {% endif %}
                     </tr>
                     {% if mov.motivo %}
-                    <tr>
+                    <tr class="motivo-row">
                         <td colspan="{% if session.user_tipo == 'admin' %}8{% else %}7{% endif %}">
-                            <small class="text-muted">
-                                <strong>Motivo:</strong> {{ mov.motivo }}
-                            </small>
+                            <div class="motivo-content">
+                                <i class="fas fa-info-circle me-2 text-muted"></i>
+                                <span class="text-muted"><strong>Motivo:</strong> {{ mov.motivo }}</span>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}
@@ -134,58 +239,142 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div class="alert alert-info text-center">
-            <h4>📋 Nenhuma movimentação encontrada</h4>
-            <p>Registre a primeira entrada ou saída de produtos.</p>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <h5>Nenhuma movimentação encontrada</h5>
+            <p class="text-muted">Registre a primeira entrada ou saída de produtos.</p>
             {% if session.user_tipo == 'admin' or session.pode_cadastrar %}
-            <div class="btn-group" role="group">
-                <a href="{{ url_for('entrada_produto') }}" class="btn btn-success">📥 Primeira Entrada</a>
-                <a href="{{ url_for('saida_produto') }}" class="btn btn-warning">📤 Primeira Saída</a>
+            <div class="empty-actions">
+                <a href="{{ url_for('entrada_produto') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>Primeira Entrada
+                </a>
+                <a href="{{ url_for('saida_produto') }}" class="btn btn-warning">
+                    <i class="fas fa-minus me-1"></i>Primeira Saída
+                </a>
             </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
+{% endif %}
 
-<!-- Resumo Estatístico -->
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card dashboard-card">
-            <div class="card-body">
-                <h5 class="card-title">📊 Total Movimentações</h5>
-                <h2 class="text-primary">{{ movimentacoes|length }}</h2>
-                <p class="card-text">Registros</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card dashboard-card">
-            <div class="card-body">
-                <h5 class="card-title">📥 Total Entradas</h5>
-                <h2 class="text-success">{{ movimentacoes|selectattr('tipo', 'equalto', 'entrada')|list|length }}</h2>
-                <p class="card-text">Registros</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card dashboard-card">
-            <div class="card-body">
-                <h5 class="card-title">📤 Total Saídas</h5>
-                <h2 class="text-warning">{{ movimentacoes|selectattr('tipo', 'equalto', 'saida')|list|length }}</h2>
-                <p class="card-text">Registros</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card dashboard-card">
-            <div class="card-body">
-                <h5 class="card-title">📦 Saldo Geral</h5>
-                <h2 class="text-info">{{ saldo_geral or 0 }}</h2>
-                <p class="card-text">Itens em estoque</p>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.action-buttons .btn {
+    padding: 12px 24px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+.action-buttons .btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+}
+.action-buttons .btn-success:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+}
+.action-buttons .btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: none;
+    color: white;
+}
+.action-buttons .btn-warning:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-right: 15px;
+}
+.stat-icon.bg-primary { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+.stat-icon.bg-success { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #059669; }
+.stat-icon.bg-warning { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706; }
+.stat-icon.bg-info { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #0891b2; }
+.movement-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.movement-badge.entrada { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #059669; }
+.movement-badge.saida { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+.quantity-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.quantity-pill.entrada { background: #d1fae5; color: #059669; }
+.quantity-pill.saida { background: #fee2e2; color: #dc2626; }
+.origin-badge, .destiny-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+.origin-badge { background: #d1fae5; color: #059669; }
+.destiny-badge { background: #fef3c7; color: #d97706; }
+.doc-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: #e0e7ff;
+    color: #4f46e5;
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+.doc-badge.os { background: #fef3c7; color: #d97706; }
+.movement-row { transition: all 0.2s ease; }
+.movement-row:hover { background: linear-gradient(90deg, rgba(59, 130, 246, 0.05), transparent); }
+.movement-row:nth-child(even) { background: #fafbfc; }
+.movement-row:nth-child(even):hover { background: linear-gradient(90deg, rgba(59, 130, 246, 0.08), transparent); }
+.motivo-row { background: #f9fafb !important; }
+.motivo-content { padding: 10px 15px; font-size: 0.85rem; }
+.btn-delete { transition: all 0.2s ease; }
+.btn-delete:hover { transform: scale(1.1); }
+.empty-state { padding: 20px; }
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+.empty-icon i { font-size: 2rem; color: #94a3b8; }
+.empty-state h5 { color: #334155; font-weight: 600; margin-bottom: 8px; }
+.empty-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+.card-header { background: linear-gradient(135deg, #f8fafc, #f1f5f9); }
+@media (max-width: 768px) {
+    .action-buttons { flex-direction: column; }
+    .action-buttons .btn { width: 100%; }
+    .movement-badge, .quantity-pill { font-size: 0.75rem; padding: 4px 8px; }
+}
+</style>
 {% endblock %}
