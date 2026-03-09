@@ -5,37 +5,89 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Unidades Cadastradas</h4>
-            <a href="{{ url_for('novo_unidade') }}" class="btn btn-primary">+ Nova Unidade</a>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-0 fw-bold" style="color: var(--text-primary);">
+                    <i class="fas fa-hospital-alt me-2" style="color: var(--sidebar-active);"></i>
+                    Unidades Cadastradas
+                </h4>
+                <small style="color: var(--text-secondary);">Gerencie as unidades hospitalares do sistema</small>
+            </div>
+            <a href="{{ url_for('units.novo_unidade') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Nova Unidade
+            </a>
         </div>
 
         <div class="card">
             <div class="card-body p-0">
-                <table class="table table-striped mb-0">
+                <table class="table mb-0">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Arquivo DB</th>
-                            <th>Ativa</th>
-                            <th class="text-end">Ações</th>
+                            <th style="width: 220px;">ID / Identificador</th>
+                            <th>Nome da Unidade</th>
+                            <th>Arquivo do Banco</th>
+                            <th style="width: 90px;">Status</th>
+                            <th class="text-end" style="width: 160px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for u in unidades %}
                         <tr>
-                            <td><code>{{ u.id }}</code></td>
-                            <td>{{ u.nome }}</td>
-                            <td>{{ u.database or '-' }}</td>
-                            <td>{{ 'Sim' if u.ativa else 'Não' }}</td>
+                            <td>
+                                <code style="background:#eef2ff; color:#4f46e5; padding:3px 7px; border-radius:4px; font-size:0.8rem;">
+                                    {{ u.id }}
+                                </code>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3" style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#e0f2fe,#bae6fd); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <i class="fas fa-hospital" style="color:#0284c7; font-size:0.9rem;"></i>
+                                    </div>
+                                    <span style="font-weight: 600; color: var(--text-primary);">{{ u.nome }}</span>
+                                </div>
+                            </td>
+                            <td style="color: var(--text-secondary); font-size: 0.875rem;">
+                                <i class="fas fa-database me-1"></i>{{ u.database or '-' }}
+                            </td>
+                            <td>
+                                {% if u.ativa %}
+                                <span class="badge" style="background:#d1fae5; color:#059669; font-size:0.75rem; padding:5px 10px; border-radius:20px;">
+                                    <i class="fas fa-check-circle me-1"></i>Ativa
+                                </span>
+                                {% else %}
+                                <span class="badge" style="background:#fee2e2; color:#dc2626; font-size:0.75rem; padding:5px 10px; border-radius:20px;">
+                                    <i class="fas fa-times-circle me-1"></i>Inativa
+                                </span>
+                                {% endif %}
+                            </td>
                             <td class="text-end">
-                                <a href="{{ url_for('editar_unidade', unit_id=u.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
-                                <a href="{{ url_for('excluir_unidade', unit_id=u.id) }}" class="btn btn-sm btn-outline-danger">Excluir</a>
+                                <a href="{{ url_for('units.editar_unidade', unit_id=u.id) }}" 
+                                   class="btn btn-sm" 
+                                   style="background:#f3f4f6; color:#374151; border:none; margin-right:4px;"
+                                   title="Editar">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <a href="{{ url_for('units.excluir_unidade', unit_id=u.id) }}" 
+                                   class="btn btn-sm"
+                                   style="background:#fee2e2; color:#dc2626; border:none;"
+                                   title="Excluir"
+                                   onclick="return confirm('Excluir a unidade {{ u.nome }}?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="5" class="text-center">Nenhuma unidade cadastrada.</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center py-5" style="color: var(--text-secondary);">
+                                <i class="fas fa-hospital-alt fa-3x mb-3 d-block" style="opacity:0.3;"></i>
+                                Nenhuma unidade cadastrada.
+                                <div class="mt-2">
+                                    <a href="{{ url_for('units.novo_unidade') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i>Criar primeira unidade
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                     {% endfor %}
                     </tbody>
                 </table>

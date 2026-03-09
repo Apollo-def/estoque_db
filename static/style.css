@@ -328,12 +328,13 @@ body {
 
 .table thead th {
     border-top: none;
-    border-bottom: 1px solid #ebedf3;
+    border-bottom: 2px solid #dde2ef;
     font-weight: 600;
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #b5b5c3;
+    color: var(--text-secondary);
+    background-color: #f8f9fc;
     padding: 12px 15px;
     white-space: nowrap;
 }
@@ -342,6 +343,20 @@ body {
     padding: 15px;
     vertical-align: middle;
     border-color: #f3f6f9;
+    color: var(--text-primary);
+}
+
+.table tbody tr:hover td {
+    background-color: rgba(54, 153, 255, 0.04);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: rgba(54, 153, 255, 0.03);
+    color: var(--text-primary);
+}
+
+.table-striped > tbody > tr:nth-of-type(even) > * {
+    color: var(--text-primary);
 }
 
 .table-hover tbody tr:hover {
