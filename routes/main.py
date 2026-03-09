@@ -97,12 +97,49 @@ def selecionar_unidade():
         todas_unidades = get_all_units()
         unidades = {k: v for k, v in todas_unidades.items() if k in unidades_permitidas}
     
+    # Se não houver unidades e for admin, redirecionar para criar uma
+    if not unidades and usuario.is_admin():
+        flash('Nenhuma unidade encontrada. Por favor, crie a primeira unidade do sistema.', 'info')
+        return redirect(url_for('units.novo_unidade'))
+    
     return render_template('selecionar_unidade.html', unidades=unidades)
 
 
 @main_bp.route('/trocar-unidade')
 def trocar_unidade():
-    """Remove unidade da sessão e redireciona para seleção"""
+    """Remove unidade da sessão e redireciona para seleção ou alterna para outra unidade"""
+    from app import db, Usuario
+    from database_config import get_database_config, get_all_units
+    from database_manager import db_manager
+    
+    # Verificar se quer trocar para uma unidade específica
+    proxima_unidade = request.args.get('proxima')
+    
+    if proxima_unidade:
+        # Trocar para a unidade especificada
+        usuario = db.session.get(Usuario, session['user_id'])
+        
+        if not usuario.pode_acessar_unidade(proxima_unidade):
+            flash('Você não tem permissão para acessar esta unidade', 'danger')
+            return redirect(url_for('main.selecionar_unidade'))
+        
+        unit_config = get_database_config(proxima_unidade)
+        if not unit_config:
+            flash('Unidade não encontrada', 'danger')
+            return redirect(url_for('main.selecionar_unidade'))
+        
+        try:
+            # Verificar se o banco da unidade existe
+            unit_db = db_manager.get_connection(proxima_unidade)
+            session['unit_id'] = proxima_unidade
+            session['unit_name'] = unit_config['name']
+            flash(f'Unidade alterada para {unit_config["name"]}!', 'success')
+            return redirect(url_for('main.index'))
+        except Exception as e:
+            flash('Erro ao conectar com a unidade', 'danger')
+            return redirect(url_for('main.selecionar_unidade'))
+    
+    # Se não especificou unidade, apenas remove a atual e redireciona para seleção
     if 'unit_id' in session:
         del session['unit_id']
     if 'unit_name' in session:

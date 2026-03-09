@@ -40,18 +40,26 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="destino" class="form-label">Destino *</label>
-                                <input type="text" class="form-control" id="destino" name="destino" 
-                                       placeholder="Ex: Cliente XYZ, Departamento Y" required>
-                                <div class="form-text">Para onde vão os produtos?</div>
+                                <label for="destino" class="form-label">Destino (Setor) *</label>
+                                <select class="form-select" id="destino" name="destino" required>
+                                    <option value="">Selecione um setor...</option>
+                                    {% if setores %}
+                                    {% for setor in setores %}
+                                    <option value="{{ setor.nome }}">{{ setor.nome }}</option>
+                                    {% endfor %}
+                                    {% else %}
+                                    <option value="" disabled>Nenhum setor cadastrado</option>
+                                    {% endif %}
+                                </select>
+                               
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="ordem_servico" class="form-label">Ordem de Serviço</label>
-                                <input type="text" class="form-control" id="ordem_servico" name="ordem_servico" 
-                                       placeholder="Ex: OS-005678">
-                                <div class="form-text">Número da OS (opcional)</div>
+                                <label for="responsavel_retirada" class="form-label">Responsável pela Retirada</label>
+                                <input type="text" class="form-control" id="responsavel_retirada" name="responsavel_retirada" 
+                                       placeholder="Ex: João Silva" required>
+                                <div class="form-text">Nome do funcionário que retirou o produto</div>
                             </div>
                         </div>
                     </div>
@@ -99,7 +107,16 @@ function mostrarInfoProduto() {
     
     if (select.value) {
         const option = select.options[select.selectedIndex];
-        const quantidade = parseInt(option.dataset.quantidade);
+        const quantidadeAttr = option.getAttribute('data-quantidade');
+        const quantidade = quantidadeAttr ? parseInt(quantidadeAttr) : 0;
+        
+        if (isNaN(quantidade)) {
+            maxDisponivelSpan.textContent = 'Erro ao carregar';
+            detalhesDiv.innerHTML = '<span class="text-danger">Erro: Quantidade do produto não disponível</span>';
+            infoDiv.style.display = 'block';
+            btnSubmit.disabled = true;
+            return;
+        }
         
         maxDisponivelSpan.textContent = quantidade + ' unidades';
         quantidadeInput.max = quantidade;
@@ -146,7 +163,14 @@ function atualizarPreview() {
     
     if (select.value && quantidade && destino) {
         const option = select.options[select.selectedIndex];
-        const estoqueAtual = parseInt(option.dataset.quantidade);
+        const estoqueAttr = option.getAttribute('data-quantidade');
+        const estoqueAtual = estoqueAttr ? parseInt(estoqueAttr) : 0;
+        
+        if (isNaN(estoqueAtual)) {
+            previewDiv.style.display = 'none';
+            return;
+        }
+        
         const nomeProduto = option.text.split(' (')[0];
         const quantidadeSaida = parseInt(quantidade);
         const novoEstoque = estoqueAtual - quantidadeSaida;
@@ -188,7 +212,7 @@ function atualizarPreview() {
 
 // Adicionar listeners para atualizar preview
 document.getElementById('quantidade').addEventListener('input', atualizarPreview);
-document.getElementById('destino').addEventListener('input', atualizarPreview);
+document.getElementById('destino').addEventListener('change', atualizarPreview);
 
 // Validar quantidade ao digitar
 document.getElementById('quantidade').addEventListener('input', function() {
@@ -197,13 +221,6 @@ document.getElementById('quantidade').addEventListener('input', function() {
     
     if (valor > max) {
         this.value = max;
-    }
-});
-
-// Sugestões rápidas para destino
-document.getElementById('destino').addEventListener('focus', function() {
-    if (!this.value) {
-        this.placeholder = 'Ex: Venda, Uso interno, Doação, Transferência';
     }
 });
 </script>

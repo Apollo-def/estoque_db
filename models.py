@@ -18,6 +18,7 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
+    matricula = db.Column(db.String(50), unique=True, nullable=True)
     senha = db.Column(db.String(255), nullable=False)
     tipo = db.Column(db.String(20), default='user')
     unidades_acesso = db.Column(db.Text)
@@ -25,27 +26,20 @@ class Usuario(db.Model):
     permissoes_menu = db.Column(db.Text)
     ativo = db.Column(db.Integer, default=1)
     data_criacao = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    ultimo_login = db.Column(db.DateTime, nullable=True)
     # Proteção contra brute force
     tentativas_login = db.Column(db.Integer, default=0)
     bloqueado_ate = db.Column(db.DateTime, nullable=True)
     
     def get_unidades_acesso(self):
+        """Lê a coluna unidades_acesso (JSON) e retorna uma lista de IDs."""
         if not self.unidades_acesso or not self.unidades_acesso.strip():
             return []
         try:
+            # A fonte de dados deve garantir que o formato é sempre um JSON válido.
             return json.loads(self.unidades_acesso)
-        except Exception:
-            try:
-                val = ast.literal_eval(self.unidades_acesso)
-                if isinstance(val, list):
-                    return val
-                return json.loads(self.unidades_acesso.replace("'", '"'))
-            except Exception:
-                try:
-                    s = self.unidades_acesso.replace("'", '"')
-                    return json.loads(s)
-                except Exception:
-                    return []
+        except json.JSONDecodeError:
+            return [] # Retorna lista vazia se o JSON for inválido
     
     def pode_acessar_unidade(self, unit_id):
         unidades = self.get_unidades_acesso()
@@ -89,3 +83,37 @@ class Unidade(db.Model):
     
     def __repr__(self):
         return f'<Unidade {self.nome}>'
+
+
+class Sugestao(db.Model):
+    """Modelo de Sugestões para o Admin"""
+    __tablename__ = 'sugestoes'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(50), default='Pendente', nullable=False) # Pendente, Em Análise, Concluída
+    resposta_admin = db.Column(db.Text, nullable=True)
+    data_criacao = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    data_resposta = db.Column(db.DateTime, nullable=True)
+
+    usuario = db.relationship('Usuario', backref=db.backref('sugestoes', lazy=True))
+
+    def __repr__(self):
+        return f'<Sugestao {self.id} - {self.titulo}>'
+
+
+class Notificacao(db.Model):
+    """Modelo para notificações do sistema"""
+    __tablename__ = 'notificacoes'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    mensagem = db.Column(db.String(255), nullable=False)
+    link = db.Column(db.String(255))
+    lida = db.Column(db.Boolean, default=False, nullable=False)
+    data_criacao = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    usuario = db.relationship('Usuario', backref=db.backref('notificacoes', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Notificacao {self.id} para {self.usuario_id}>'

@@ -12,16 +12,16 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('novo_unidade') }}">
                     <div class="mb-3">
-                        <label class="form-label">ID da Unidade (ex: hospital_sao_paulo)</label>
-                        <input class="form-control" name="unit_id" required placeholder="hospital_sao_paulo">
+                        <label class="form-label">ID da Unidade (ex: hospital_presidente_dutra)</label>
+                        <input class="form-control" name="unit_id" required placeholder="hospital_presidente_dutra">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nome</label>
-                        <input class="form-control" name="nome" required placeholder="Hospital São Paulo">
+                        <input class="form-control" name="nome" required placeholder="Hospital presidente Dutra">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Arquivo do Banco (sqlite)</label>
-                        <input class="form-control" name="arquivo_db" required placeholder="hospital_sao_paulo.db">
+                        <input class="form-control" name="arquivo_db" required placeholder="hospital_presidente_dutra.db">
                         <div class="form-text">Para SQLite informe o nome do arquivo dentro da pasta <code>instance/</code>.</div>
                     </div>
                     <div class="mb-3">

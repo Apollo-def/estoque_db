@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Nova Sugestão{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Enviar Sugestão</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Use este espaço para sugerir melhorias, novas funcionalidades ou qualquer outra ideia para aprimorar o sistema.</p>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título da Sugestão *</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" required placeholder="Ex: Melhorar relatório de estoque">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descreva sua Sugestão *</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="6" required placeholder="Detalhe sua ideia aqui..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('suggestions.minhas_sugestoes') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Enviar Sugestão
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
