@@ -14,7 +14,7 @@ def setores():
     if not unit_db:
         flash('Erro ao conectar', 'danger')
         return redirect(url_for('main.selecionar_unidade'))
-    cursor = unit_db.execute('SELECT * FROM setores WHERE ativo = 1 ORDER BY nome')
+    cursor = unit_db.execute('SELECT * FROM setores WHERE ativo = 1 ORDER BY id ASC, nome ASC')
     return render_template('setores.html', setores=cursor.fetchall())
 
 

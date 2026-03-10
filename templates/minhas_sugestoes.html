@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Minhas Sugestões{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-lightbulb me-2"></i>Minhas Sugestões</h2>
+    <a href="{{ url_for('suggestions.nova_sugestao') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Enviar Nova Sugestão
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if sugestoes %}
+        <div class="accordion" id="accordionSugestoes">
+        {% for sugestao in sugestoes %}
+            <div class="accordion-item mb-3">
+                <h2 class="accordion-header" id="heading{{ sugestao.id }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ sugestao.id }}" aria-expanded="false" aria-controls="collapse{{ sugestao.id }}">
+                        <span class="me-3">
+                            {% if sugestao.status == 'Pendente' %}
+                            <span class="badge bg-warning">Pendente</span>
+                            {% elif sugestao.status == 'Em Análise' %}
+                            <span class="badge bg-info">Em Análise</span>
+                            {% elif sugestao.status == 'Concluída' %}
+                            <span class="badge bg-success">Concluída</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ sugestao.status }}</span>
+                            {% endif %}
+                        </span>
+                        <span class="fw-bold">{{ sugestao.titulo }}</span>
+                        <small class="ms-auto text-muted">{{ sugestao.data_criacao.strftime('%d/%m/%Y') }}</small>
+                    </button>
+                </h2>
+                <div id="collapse{{ sugestao.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ sugestao.id }}" data-bs-parent="#accordionSugestoes">
+                    <div class="accordion-body">
+                        <strong>Sua Sugestão:</strong>
+                        <p class="text-muted">{{ sugestao.descricao|nl2br }}</p>
+                        <hr>
+                        <strong>Resposta do Administrador:</strong>
+                        {% if sugestao.resposta_admin %}
+                        <p class="text-muted">{{ sugestao.resposta_admin|nl2br }}</p>
+                        <small>Respondido em: {{ sugestao.data_resposta.strftime('%d/%m/%Y %H:%M') }}</small>
+                        {% else %}
+                        <p class="text-muted">Aguardando resposta.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Você ainda não enviou nenhuma sugestão.</h4>
+            <p>Suas ideias são importantes para nós! Clique no botão abaixo para começar.</p>
+            <a href="{{ url_for('suggestions.nova_sugestao') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i>Enviar Primeira Sugestão
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

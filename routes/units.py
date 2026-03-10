@@ -12,23 +12,46 @@ units_bp = Blueprint('units', __name__, url_prefix='/unidades')
 @units_bp.route('')
 def listar_unidades():
     """Lista todas as unidades"""
-    from app import db, Usuario, Unidade
+    from flask import current_app
+    from app import Unidade
+    from database_config import get_all_units
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
     
-    if session.get('user_tipo') == 'admin':
-        unidades = Unidade.query.order_by(Unidade.id).all()
+    try:
+        # Usar get_all_units para garantir que unidades do central.db e do dict sejam incluídas
+        todas = get_all_units()  # dict {id: {name, database, ...}}
+
+        # Buscar via ORM para ter o campo 'ativa' — ler atributos imediatamente (evita lazy load no template)
+        orm_map = {}
+        for u in Unidade.query.all():
+            orm_map[u.id] = {
+                'id': u.id,
+                'nome': u.nome,
+                'database': u.database,
+                'ativa': u.ativa,
+            }
+
+        # Montar lista unificada como dicts simples (evita problemas de sessão SQLAlchemy no Jinja2)
+        unidades = []
+        for uid, cfg in sorted(todas.items(), key=lambda x: x[1].get('name', '')):
+            if uid in orm_map:
+                unidades.append(orm_map[uid])
+            else:
+                unidades.append({
+                    'id': uid,
+                    'nome': cfg.get('name', uid),
+                    'database': cfg.get('database', ''),
+                    'ativa': 1,
+                })
+
+        current_app.logger.info(f"[listar_unidades] total={len(unidades)}")
         return render_template('listar_unidades.html', unidades=unidades)
-    
-    user_permissoes = session.get('permissoes_menu', {})
-    
-    if not user_permissoes.get('unidades', False):
-        flash('Você não tem permissão para acessar esta página.', 'danger')
-        return redirect(url_for('main.index'))
-    
-    unidades = Unidade.query.order_by(Unidade.id).all()
-    return render_template('listar_unidades.html', unidades=unidades)
+    except Exception as e:
+        current_app.logger.error(f"[listar_unidades] Erro: {e}", exc_info=True)
+        flash('Erro ao carregar unidades', 'danger')
+        return render_template('listar_unidades.html', unidades=[])
 
 
 @units_bp.route('/novo', methods=['GET', 'POST'])
@@ -94,7 +117,12 @@ def novo_unidade():
         try:
             db_manager.init_database(unit_id)
             flash('Unidade criada com sucesso e banco inicializado.', 'success')
-            return redirect(url_for('users.tabela'))
+            
+            # Admin automaticamente tem acesso a qualquer unidade
+            # Selecionar a unidade automaticamente e redirecionar para o dashboard
+            session['unit_id'] = unit_id
+            session['unit_name'] = nome
+            return redirect(url_for('main.index'))
         except Exception as e:
             flash('Unidade criada no central, mas falha ao inicializar o banco.', 'warning')
             return redirect(url_for('users.tabela'))

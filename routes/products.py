@@ -1,36 +1,27 @@
 # Rotas de Gerenciamento de Produtos
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from datetime import datetime, timezone
-from routes.helpers import get_unit_db, check_permission
+from routes.helpers import get_unit_db, check_permission, login_required, require_unit
 
 products_bp = Blueprint('products', __name__, url_prefix='/produtos')
 
 
 @products_bp.route('')
+@login_required
+@require_unit
 def produtos():
     """Lista produtos"""
     from app import db, Usuario
-    
-    if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
-    
-    if 'unit_id' not in session:
-        return redirect(url_for('main.selecionar_unidade'))
     
     unit_db = get_unit_db()
     if not unit_db:
         flash('Erro ao conectar com o banco da unidade', 'danger')
         return redirect(url_for('main.selecionar_unidade'))
     
-    categoria = request.args.get('categoria', '')
     estoque_status = request.args.get('estoque', '')
     
     query = 'SELECT * FROM produtos WHERE ativo = 1'
     params = []
-    
-    if categoria:
-        query += ' AND categoria = ?'
-        params.append(categoria)
     
     if estoque_status == 'baixo':
         query += ' AND quantidade <= estoque_minimo'
@@ -58,10 +49,7 @@ def produtos():
             produto_dict['usuario_nome'] = None
         produtos_com_info.append(produto_dict)
     
-    cursor = unit_db.execute('SELECT DISTINCT categoria FROM produtos WHERE ativo = 1 AND categoria IS NOT NULL ORDER BY categoria')
-    categorias = [row[0] for row in cursor.fetchall()]
-    
-    return render_template('produtos.html', produtos=produtos_com_info, categorias=categorias)
+    return render_template('produtos.html', produtos=produtos_com_info)
 
 
 @products_bp.route('/novo', methods=['GET', 'POST'])
@@ -83,16 +71,15 @@ def novo_produto():
         nome = request.form['nome']
         descricao = request.form.get('descricao', '')
         quantidade = int(request.form['quantidade'])
-        categoria = request.form.get('categoria', '')
         codigo_barras = request.form.get('codigo_barras', '')
         unidade_medida = request.form.get('unidade_medida', 'un')
         estoque_minimo = int(request.form.get('estoque_minimo', 5))
         
         try:
             cursor = unit_db.execute('''
-                INSERT INTO produtos (nome, descricao, quantidade, categoria, usuario_id, codigo_barras, unidade_medida, estoque_minimo)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (nome, descricao, quantidade, categoria, session['user_id'], codigo_barras, unidade_medida, estoque_minimo))
+                INSERT INTO produtos (nome, descricao, quantidade, usuario_id, codigo_barras, unidade_medida, estoque_minimo)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (nome, descricao, quantidade, session['user_id'], codigo_barras, unidade_medida, estoque_minimo))
             unit_db.commit()
             flash('Produto cadastrado com sucesso!', 'success')
             return redirect(url_for('products.produtos'))
@@ -131,7 +118,6 @@ def editar_produto(id):
         nome = request.form['nome']
         descricao = request.form.get('descricao', '')
         quantidade = int(request.form['quantidade'])
-        categoria = request.form.get('categoria', '')
         codigo_barras = request.form.get('codigo_barras', '')
         unidade_medida = request.form.get('unidade_medida', 'un')
         estoque_minimo = int(request.form.get('estoque_minimo', 5))
@@ -139,11 +125,11 @@ def editar_produto(id):
         try:
             cursor = unit_db.execute('''
                 UPDATE produtos 
-                SET nome = ?, descricao = ?, quantidade = ?, categoria = ?, 
+                SET nome = ?, descricao = ?, quantidade = ?, 
                     codigo_barras = ?, unidade_medida = ?, estoque_minimo = ?,
                     data_atualizacao = CURRENT_TIMESTAMP
                 WHERE id = ?
-            ''', (nome, descricao, quantidade, categoria, codigo_barras, unidade_medida, estoque_minimo, id))
+            ''', (nome, descricao, quantidade, codigo_barras, unidade_medida, estoque_minimo, id))
             unit_db.commit()
             flash('Produto atualizado com sucesso!', 'success')
             return redirect(url_for('products.produtos'))

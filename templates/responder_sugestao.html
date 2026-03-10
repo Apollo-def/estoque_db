@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Responder Sugestão{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-reply me-2"></i>Responder Sugestão</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4 p-3 bg-light rounded">
+                    <h5>Sugestão de: {{ sugestao.usuario.nome }}</h5>
+                    <p><strong>Título:</strong> {{ sugestao.titulo }}</p>
+                    <p><strong>Descrição:</strong><br>{{ sugestao.descricao|nl2br }}</p>
+                    <small class="text-muted">Enviado em: {{ sugestao.data_criacao.strftime('%d/%m/%Y %H:%M') }}</small>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Alterar Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="Pendente" {% if sugestao.status == 'Pendente' %}selected{% endif %}>Pendente</option>
+                            <option value="Em Análise" {% if sugestao.status == 'Em Análise' %}selected{% endif %}>Em Análise</option>
+                            <option value="Concluída" {% if sugestao.status == 'Concluída' %}selected{% endif %}>Concluída</option>
+                            <option value="Rejeitada" {% if sugestao.status == 'Rejeitada' %}selected{% endif %}>Rejeitada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="resposta_admin" class="form-label">Sua Resposta</label>
+                        <textarea class="form-control" id="resposta_admin" name="resposta_admin" rows="5" placeholder="Escreva uma resposta para o usuário...">{{ sugestao.resposta_admin or '' }}</textarea>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{{ url_for('suggestions.admin_sugestoes') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Enviar Resposta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
