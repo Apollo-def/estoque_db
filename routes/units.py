@@ -13,20 +13,43 @@ units_bp = Blueprint('units', __name__, url_prefix='/unidades')
 def listar_unidades():
     """Lista todas as unidades"""
     from flask import current_app
-    from app import db, Usuario, Unidade
+    from app import Unidade
+    from database_config import get_all_units
     
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
     
-    from sqlalchemy import cast, Integer
     try:
-        unidades = Unidade.query.order_by(cast(Unidade.id, Integer)).all()
-        current_app.logger.info(f"Unidades encontradas: {len(unidades)}")
-        for u in unidades:
-            current_app.logger.info(f"  - ID: {u.id}, Nome: {u.nome}")
+        # Usar get_all_units para garantir que unidades do central.db e do dict sejam incluídas
+        todas = get_all_units()  # dict {id: {name, database, ...}}
+
+        # Buscar via ORM para ter o campo 'ativa' — ler atributos imediatamente (evita lazy load no template)
+        orm_map = {}
+        for u in Unidade.query.all():
+            orm_map[u.id] = {
+                'id': u.id,
+                'nome': u.nome,
+                'database': u.database,
+                'ativa': u.ativa,
+            }
+
+        # Montar lista unificada como dicts simples (evita problemas de sessão SQLAlchemy no Jinja2)
+        unidades = []
+        for uid, cfg in sorted(todas.items(), key=lambda x: x[1].get('name', '')):
+            if uid in orm_map:
+                unidades.append(orm_map[uid])
+            else:
+                unidades.append({
+                    'id': uid,
+                    'nome': cfg.get('name', uid),
+                    'database': cfg.get('database', ''),
+                    'ativa': 1,
+                })
+
+        current_app.logger.info(f"[listar_unidades] total={len(unidades)}")
         return render_template('listar_unidades.html', unidades=unidades)
     except Exception as e:
-        current_app.logger.error(f"Erro ao buscar unidades: {e}")
+        current_app.logger.error(f"[listar_unidades] Erro: {e}", exc_info=True)
         flash('Erro ao carregar unidades', 'danger')
         return render_template('listar_unidades.html', unidades=[])
 
